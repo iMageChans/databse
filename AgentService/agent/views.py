@@ -71,7 +71,7 @@ class AgentViewSet(CreateModelMixin,
             elif user_template_id and not is_premium:
                 user_template = UsersAssistantTemplates.objects.get(user_id=user_id, id=user_template_id, is_premium_template=False)
                 custom_prompt = user_template.prompt_template
-            else:
+            elif user_template_id and not is_premium:
                 user_template = UsersAssistantTemplates.objects.get(user_id=user_id, is_default=True)
                 custom_prompt = user_template.prompt_template
         except:
