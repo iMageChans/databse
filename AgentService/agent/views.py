@@ -11,6 +11,7 @@ from utils.mixins import *
 from rest_framework.viewsets import GenericViewSet
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from assistant.models import Assistant
 
 
 class AgentViewSet(CreateModelMixin,
@@ -59,7 +60,9 @@ class AgentViewSet(CreateModelMixin,
         manager = initialize()
         manager.assistants[assistant_name].set_model(manager.models[model_name])
 
-        custom_prompt = None
+        assistant = Assistant.objects.filter(name="Alice").first()
+
+        custom_prompt = assistant.prompt_template
         try:
             from assistant.models import UsersAssistantTemplates
             if user_template_id and is_premium:
