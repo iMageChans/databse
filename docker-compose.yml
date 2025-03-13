@@ -47,8 +47,8 @@ services:
       - DB_PORT=5432
       - REDIS_URL=redis://redis:6379/0
     volumes:
-      - /var/www/users/static:/app/staticfiles
-      - /var/www/users/static:/app/media
+      - /var/www/static:/app/staticfiles
+      - /var/www/static:/app/media
       - ./templates:/app/templates
     command: >
       sh -c "python manage.py migrate &&
