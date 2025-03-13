@@ -57,6 +57,8 @@ class TokenAuthMiddleware:
                 headers={'Authorization': f'{token}'},
                 timeout=5
             )
+            print(response.status_code)
+            print(response.json())
             response.raise_for_status()
             return response.json().get('data', {})
         except requests.HTTPError as e:
