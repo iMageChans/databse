@@ -36,6 +36,7 @@ ALLOWED_HOSTS = ['localhost',
 
 BASE_URL = 'http://users-service:8001'
 TOKEN_COOKIE_NAME = 'joker'
+FORCE_SCRIPT_NAME = '/agent'
 
 
 # Application definition

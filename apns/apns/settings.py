@@ -32,6 +32,8 @@ ALLOWED_HOSTS = ['localhost',
 
 
 BASE_URL = 'http://users-service:8001'
+TOKEN_COOKIE_NAME = 'joker'
+FORCE_SCRIPT_NAME = '/apns'
 
 # Application definition
 
@@ -190,5 +192,3 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 
-# Token settings
-TOKEN_COOKIE_NAME = 'joker'
