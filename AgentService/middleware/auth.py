@@ -1,5 +1,4 @@
 import requests
-import re
 from django.conf import settings
 from django.http import JsonResponse
 from django.contrib.auth.models import AnonymousUser
@@ -11,13 +10,13 @@ class TokenAuthMiddleware:
         self.get_response = get_response
         self.auth_api_url = f"{settings.BASE_URL.rstrip('/')}/users/api/users/me/"
         self.exempt_patterns = [
-            re.compile(r'^/users/api/auth/login/?$'),
-            re.compile(r'^/admin/'),
-            re.compile(r'^/openapi\.json$'),
-            re.compile(r'^/static/'),
-            re.compile(r'^/media/'),
-            re.compile(r'^/swagger/'),
-            re.compile(r'^/redoc/')
+            '/users/api/auth/login/',
+            '/admin/',
+            '/openapi',
+            '/static/',
+            '/media/',
+            '/swagger/',
+            '/redoc/'
         ]
         self.retries = Retry(
             total=3,
