@@ -31,7 +31,7 @@ class AppleAppConfiguration(models.Model):
     
     is_production = models.BooleanField(_('生产环境'), default=True, 
                                       help_text=_('是否为生产环境，否则为开发环境'))
-    shared_secret = models.CharField(_('shared_secret'), max_length=20,
+    shared_secret = models.CharField(_('shared_secret'), max_length=255,
                             help_text=_('内购密码'), default='')
     is_active = models.BooleanField(_('是否启用'), default=True)
     
