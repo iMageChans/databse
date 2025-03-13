@@ -47,9 +47,9 @@ services:
       - DB_PORT=5432
       - REDIS_URL=redis://redis:6379/0
     volumes:
-      - /var/www/static:/app/staticfiles
-      - /var/www/static:/app/media
-      - ./templates:/app/templates
+      - /var/www/static/users-service:/app/staticfiles
+      - /var/www/static/users-service:/app/media
+      - ./templates/users-service:/app/templates
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
@@ -75,9 +75,9 @@ services:
       - DB_PORT=5432
       - REDIS_URL=redis://redis:6379/0  # 使用 Redis 服务名称
     volumes:
-      - /var/www/static:/app/staticfiles
-      - /var/www/static:/app/media
-      - ./templates:/app/templates
+      - /var/www/static/pocket-service:/app/staticfiles
+      - /var/www/static/pocket-service:/app/media
+      - ./templates/pocket-service:/app/templates
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
@@ -103,9 +103,9 @@ services:
       - DB_PORT=5432
       - REDIS_URL=redis://redis:6379/0  # 使用 Redis 服务名称
     volumes:
-      - /var/www/static:/app/staticfiles
-      - /var/www/static:/app/media
-      - /var/www/templates:/app/templates
+      - /var/www/static/apns-service:/app/staticfiles
+      - /var/www/static/apns-service:/app/media
+      - ./templates/apns-service:/app/templates
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
@@ -131,9 +131,9 @@ services:
       - DB_PORT=5432
       - REDIS_URL=redis://redis:6379/0  # 使用 Redis 服务名称
     volumes:
-      - /var/www/static:/app/staticfiles
-      - /var/www/static:/app/media
-      - /var/www/templates:/app/templates
+      - /var/www/static/agent-service:/app/staticfiles
+      - /var/www/static/agent-service:/app/media
+      - ./templates/agent-service:/app/templates
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
@@ -161,9 +161,9 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/1
       - CELERY_RESULT_BACKEND=redis://redis:6379/1
     volumes:
-      - /var/www/static:/app/staticfiles
-      - /var/www/static:/app/media
-      - /var/www/templates:/app/templates
+      - /var/www/static/apns-celery-worker:/app/staticfiles
+      - /var/www/static/apns-celery-worker:/app/media
+      - ./templates/apns-celery-worker:/app/templates
     command: ["celery", "-A", "apns", "worker", "--loglevel=info"]
     networks:
       - app_network
@@ -186,9 +186,9 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/1
       - CELERY_RESULT_BACKEND=redis://redis:6379/1
     volumes:
-      - /var/www/static:/app/staticfiles
-      - /var/www/static:/app/media
-      - /var/www/templates:/app/templates
+      - /var/www/static/apns-celery-beat:/app/staticfiles
+      - /var/www/static/apns-celery-beat:/app/media
+      - ./templates/apns-celery-beat:/app/templates
     command: ["celery", "-A", "apns", "beat", "--loglevel=info"]
     networks:
       - app_network
