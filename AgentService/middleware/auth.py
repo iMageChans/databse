@@ -15,8 +15,8 @@ class TokenAuthMiddleware:
             re.compile(r'^/admin/'),
             re.compile(r'^/openapi\.json$'),
             re.compile(r'^/static/'),
-            re.compile(r'^/media/')
-            re.compile(r'^/swagger/')
+            re.compile(r'^/media/'),
+            re.compile(r'^/swagger/'),
             re.compile(r'^/redoc/')
         ]
         self.retries = Retry(
