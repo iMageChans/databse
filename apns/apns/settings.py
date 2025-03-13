@@ -31,7 +31,7 @@ ALLOWED_HOSTS = ['localhost',
                  'pocket.pulseheath.com']
 
 
-BASE_URL = 'http://users-service:8001'
+BASE_URL = 'https://pocket.pulseheath.com'
 TOKEN_COOKIE_NAME = 'joker'
 FORCE_SCRIPT_NAME = '/apns'
 

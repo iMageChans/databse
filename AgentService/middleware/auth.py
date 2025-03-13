@@ -1,15 +1,17 @@
+# middleware/auth.py
 import requests
 from django.conf import settings
 from django.http import JsonResponse
-from django.contrib.auth.models import AnonymousUser
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+
 
 class TokenAuthMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
         self.auth_api_url = f"{settings.BASE_URL.rstrip('/')}/users/api/users/me/"
-        self.exempt_patterns = [
+        print(self.auth_api_url)
+        self.exempt_paths = [
             '/users/api/auth/login/',
             '/admin/',
             '/openapi',
@@ -18,11 +20,6 @@ class TokenAuthMiddleware:
             '/swagger/',
             '/redoc/'
         ]
-        self.retries = Retry(
-            total=3,
-            backoff_factor=0.3,
-            status_forcelist=[500, 502, 503, 504]
-        )
 
     def __call__(self, request):
         if request.method == 'OPTIONS':
@@ -47,7 +44,6 @@ class TokenAuthMiddleware:
 
         session = requests.Session()
         retries = Retry(total=2, backoff_factor=0.1)
-        session.mount('http://', HTTPAdapter(max_retries=retries))
         session.mount('https://', HTTPAdapter(max_retries=retries))
 
         try:
