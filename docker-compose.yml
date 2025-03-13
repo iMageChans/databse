@@ -138,6 +138,51 @@ services:
       - "8004:8004"
     networks:
       - app_network
+  apns-celery-worker:
+    build:
+      context: ./apns
+      dockerfile: Dockerfile
+    container_name: apns-celery-worker
+    restart: unless-stopped
+    environment:
+      - DJANGO_SETTINGS_MODULE=apns.settings
+      - PYTHONPATH=/app
+      - DB_NAME=apns_db        # 根据实际情况填写
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=postgres        # 关键修复：使用服务名称
+      - DB_PORT=5432
+      - REDIS_URL=redis://redis:6379/0  # 使用 Redis 服务名称
+    volumes:
+      - /var/www/agent/static:/app/staticfiles
+      - /var/www/agent/static:/app/media
+      - ./templates:/app/templates
+    command: ["celery", "-A", "apns", "worker", "--loglevel=info"]
+    networks:
+      - app_network
+
+  apns-celery-beat:
+    build:
+      context: ./apns
+      dockerfile: Dockerfile
+    container_name: apns-celery-beat
+    restart: unless-stopped
+    environment:
+      - DJANGO_SETTINGS_MODULE=apns.settings
+      - PYTHONPATH=/app
+      - DB_NAME=apns_db        # 根据实际情况填写
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=postgres        # 关键修复：使用服务名称
+      - DB_PORT=5432
+      - REDIS_URL=redis://redis:6379/0  # 使用 Redis 服务名称
+    volumes:
+      - /var/www/agent/static:/app/staticfiles
+      - /var/www/agent/static:/app/media
+      - ./templates:/app/templates
+    command: ["celery", "-A", "apns", "beat", "--loglevel=info"]
+    networks:
+      - app_network
 
 networks:
   app_network:

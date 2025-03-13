@@ -176,8 +176,8 @@ REST_FRAMEWORK = {
 CORS_ALLOW_ALL_ORIGINS = True
 
 # Celery settings
-CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://redis_celery:6380/0')
-CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://redis_celery:6380/0')
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://redis_celery:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://redis_celery:6379/0')
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
