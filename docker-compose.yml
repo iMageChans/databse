@@ -101,7 +101,6 @@ services:
       - DB_PORT=5432
       - REDIS_URL=redis://redis:6379/0  # 使用 Redis 服务名称
     volumes:
-      - ./:/app
       - /var/www/static:/app/staticfiles
       - /var/www/static:/app/media
       - ./templates:/app/templates
@@ -129,7 +128,6 @@ services:
       - DB_PORT=5432
       - REDIS_URL=redis://redis:6379/0  # 使用 Redis 服务名称
     volumes:
-      - ./:/app
       - /var/www/static:/app/staticfiles
       - /var/www/static:/app/media
       - ./templates:/app/templates
@@ -158,7 +156,6 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/1
       - CELERY_RESULT_BACKEND=redis://redis:6379/1
     volumes:
-      - ./:/app
       - /var/www/static:/app/staticfiles
       - /var/www/static:/app/media
       - ./templates:/app/templates
@@ -184,7 +181,6 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/1
       - CELERY_RESULT_BACKEND=redis://redis:6379/1
     volumes:
-      - ./:/app
       - /var/www/static:/app/staticfiles
       - /var/www/static:/app/media
       - ./templates:/app/templates
