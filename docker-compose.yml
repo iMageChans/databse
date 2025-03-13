@@ -1,0 +1,148 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:13.20
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mydb
+      POSTGRES_MULTIPLE_DATABASES: "users_db,apns_db,agent_db,pocket_db"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./create-multiple-postgresql-databases.sh:/docker-entrypoint-initdb.d/create-multiple-postgresql-databases.sh
+    networks:
+      - app_network
+
+  redis:
+    image: redis:latest
+    container_name: redis_cache
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - app_network
+
+  users-service:
+    build:
+      context: ./UserCenter
+      dockerfile: Dockerfile
+    container_name: users-service
+    restart: unless-stopped
+    environment:
+      - DJANGO_SETTINGS_MODULE=UserCenter.settings
+      - DJANGO_ENV=production
+      - PYTHONPATH=/app
+      - DB_NAME=users_db        # 根据实际情况填写
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=postgres        # 关键修复：使用服务名称
+      - DB_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - /var/www/users/static:/app/staticfiles
+      - /var/www/users/static:/app/media
+      - ./templates:/app/templates
+    command: >
+      sh -c "python manage.py migrate &&
+             gunicorn --bind 0.0.0.0:8001 UserCenter.wsgi:application"
+    ports:
+      - "8001:8001"
+    networks:
+      - app_network
+
+  pocket-service:
+    build:
+      context: ./PocketAi
+      dockerfile: Dockerfile
+    container_name: pocket-service
+    restart: unless-stopped
+    environment:
+      - DJANGO_SETTINGS_MODULE=PocketAi.settings
+      - PYTHONPATH=/app
+      - DB_NAME=pocket_db        # 根据实际情况填写
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=postgres        # 关键修复：使用服务名称
+      - DB_PORT=5432
+      - REDIS_URL=redis://redis:6379/0  # 使用 Redis 服务名称
+    volumes:
+      - /var/www/agent/static:/app/staticfiles
+      - /var/www/agent/static:/app/media
+      - ./templates:/app/templates
+    command: >
+      sh -c "python manage.py migrate &&
+             gunicorn --bind 0.0.0.0:8002 PocketAi.wsgi:application"
+    ports:
+      - "8002:8002"
+    networks:
+      - app_network
+
+  apns-service:
+    build:
+      context: ./apns
+      dockerfile: Dockerfile
+    container_name: apns-service
+    restart: unless-stopped
+    environment:
+      - DJANGO_SETTINGS_MODULE=apns.settings
+      - PYTHONPATH=/app
+      - DB_NAME=apns_db        # 根据实际情况填写
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=postgres        # 关键修复：使用服务名称
+      - DB_PORT=5432
+      - REDIS_URL=redis://redis:6379/0  # 使用 Redis 服务名称
+    volumes:
+      - /var/www/agent/static:/app/staticfiles
+      - /var/www/agent/static:/app/media
+      - ./templates:/app/templates
+    command: >
+      sh -c "python manage.py migrate &&
+             gunicorn --bind 0.0.0.0:8003 apns.wsgi:application"
+    ports:
+      - "8003:8003"
+    networks:
+      - app_network
+
+  agent-service:
+    build:
+      context: ./AgentService
+      dockerfile: Dockerfile
+    container_name: agent-service
+    restart: unless-stopped
+    environment:
+      - DJANGO_SETTINGS_MODULE=AgentService.settings
+      - PYTHONPATH=/app
+      - DB_NAME=agent_db        # 根据实际情况填写
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=postgres        # 关键修复：使用服务名称
+      - DB_PORT=5432
+      - REDIS_URL=redis://redis:6379/0  # 使用 Redis 服务名称
+    volumes:
+      - /var/www/agent/static:/app/staticfiles
+      - /var/www/agent/static:/app/media
+      - ./templates:/app/templates
+    command: >
+      sh -c "python manage.py migrate &&
+             gunicorn --bind 0.0.0.0:8004 AgentService.wsgi:application"
+    ports:
+      - "8004:8004"
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
