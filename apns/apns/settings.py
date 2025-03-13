@@ -26,7 +26,12 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'apnsiegx=@fvbt$zy1e_rf7jh&#i$zvjiaf#n
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,users.pulseheath.com').split(',')
+ALLOWED_HOSTS = ['localhost',
+                 '127.0.0.1',
+                 'pocket.pulseheath.com']
+
+
+BASE_URL = 'http://users-service:8001'
 
 # Application definition
 
@@ -189,6 +194,3 @@ CELERY_RESULT_SERIALIZER = 'json'
 TOKEN_COOKIE_NAME = 'joker'
 
 FORCE_SCRIPT_NAME = '/apns'
-
-# Base URL for external services
-BASE_URL = os.environ.get('BASE_URL', 'https://users.pulseheath.com/')

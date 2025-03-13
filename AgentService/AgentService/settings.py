@@ -29,12 +29,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY', default='django-insecure-oi#*_o+3&81=&r&zy+#q3p3^7kc0=mfpd5kmf-p9213ax#%krr')
 DEBUG = env.bool('DEBUG', default=False)
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
+ALLOWED_HOSTS = ['localhost',
+                 '127.0.0.1',
+                 'pocket.pulseheath.com']
 
-# SECURITY WARNING: don't run with debug turned on in production!
 
-
-BASE_URL = 'https://users.pulseheath.com/'
+BASE_URL = 'http://users-service:8001'
 TOKEN_COOKIE_NAME = 'joker'
 
 
