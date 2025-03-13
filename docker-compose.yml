@@ -52,6 +52,7 @@ services:
       - ./templates:/app/templates
     command: >
       sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
              gunicorn --bind 0.0.0.0:8001 UserCenter.wsgi:application"
     ports:
       - "8001:8001"
@@ -79,6 +80,7 @@ services:
       - ./templates:/app/templates
     command: >
       sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
              gunicorn --bind 0.0.0.0:8002 PocketAi.wsgi:application"
     ports:
       - "8002:8002"
@@ -103,9 +105,10 @@ services:
     volumes:
       - /var/www/static:/app/staticfiles
       - /var/www/static:/app/media
-      - ./templates:/app/templates
+      - /var/www/templates:/app/templates
     command: >
       sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
              gunicorn --bind 0.0.0.0:8003 apns.wsgi:application"
     ports:
       - "8003:8003"
@@ -130,14 +133,16 @@ services:
     volumes:
       - /var/www/static:/app/staticfiles
       - /var/www/static:/app/media
-      - ./templates:/app/templates
+      - /var/www/templates:/app/templates
     command: >
       sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
              gunicorn --bind 0.0.0.0:8004 AgentService.wsgi:application"
     ports:
       - "8004:8004"
     networks:
       - app_network
+
   apns-celery-worker:
     build:
       context: ./apns
@@ -158,7 +163,7 @@ services:
     volumes:
       - /var/www/static:/app/staticfiles
       - /var/www/static:/app/media
-      - ./templates:/app/templates
+      - /var/www/templates:/app/templates
     command: ["celery", "-A", "apns", "worker", "--loglevel=info"]
     networks:
       - app_network
@@ -183,7 +188,7 @@ services:
     volumes:
       - /var/www/static:/app/staticfiles
       - /var/www/static:/app/media
-      - ./templates:/app/templates
+      - /var/www/templates:/app/templates
     command: ["celery", "-A", "apns", "beat", "--loglevel=info"]
     networks:
       - app_network
