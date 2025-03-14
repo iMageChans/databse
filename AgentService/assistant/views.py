@@ -356,8 +356,15 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
         return prompt
 
 
-class OptionsViewSet(ListModelMixin, GenericViewSet):
+class OptionsViewSet(ListModelMixin,
+                     GenericViewSet):
     permission_classes = [IsAuthenticatedExternal]
+
+    def get_queryset(self):
+        pass
+
+    def get_serializer_class(self):
+        pass
 
     def list(self, request, *args, **kwargs):
         return self.available_options(request)
