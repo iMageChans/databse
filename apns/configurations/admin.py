@@ -22,7 +22,7 @@ class AppleAppConfigurationAdmin(admin.ModelAdmin):
     list_display = ('name', 'bundle_id', 'team_id', 'is_production', 'is_active', 'environment_badge', 'created_at')
     list_filter = ('is_production', 'is_active', 'created_at')
     search_fields = ('name', 'bundle_id', 'team_id', 'key_id')
-    readonly_fields = ('created_at', 'updated_at', 'formatted_auth_key', 'apns_host', 'masked_shared_secret')
+    readonly_fields = ('created_at', 'updated_at', 'formatted_auth_key', 'apns_host', 'masked_shared_secret', 'masked_admin_token')
     fieldsets = (
         ('基本信息', {
             'fields': ('name', 'bundle_id', 'is_active')
