@@ -56,7 +56,9 @@ class AssistantViewSet(ListModelMixin,
             return self.get_paginated_response(serializer.data)
         
         serializer = self.get_serializer(queryset, many=True)
-        return api_response(data=serializer.data)
+        return api_response(data={
+            "results": serializer.data,
+        })
 
     @swagger_auto_schema(
         operation_summary="获取助手详情",
