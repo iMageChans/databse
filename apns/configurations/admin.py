@@ -34,6 +34,10 @@ class AppleAppConfigurationAdmin(admin.ModelAdmin):
             'fields': ('shared_secret', 'masked_shared_secret'),
             'description': '内购共享密钥用于验证收据。输入新密钥后，原密钥将被替换。'
         }),
+        ('管理员Token', {
+            'fields': ('admin_token', 'masked_admin_token'),
+            'description': '管理员Token。'
+        }),
         ('环境设置', {
             'fields': ('is_production', 'apns_host')
         }),
@@ -60,6 +64,24 @@ class AppleAppConfigurationAdmin(admin.ModelAdmin):
             )
 
     environment_badge.short_description = '环境'
+
+    def masked_admin_token(self, obj):
+        """
+        显示掩码后的共享密钥
+        """
+        if not obj.admin_token:
+            return '未设置共享密钥'
+
+        # 只显示前4位和后4位，中间用星号代替
+        secret_len = len(obj.admin_token)
+        if secret_len <= 8:
+            masked = '*' * secret_len
+        else:
+            masked = obj.admin_token[:4] + '*' * (secret_len - 8) + obj.admin_token[-4:]
+
+        return format_html('<code style="font-size: 1.1em;">{}</code>', masked)
+
+    masked_admin_token.short_description = 'AdminToken(掩码显示)'
 
     def masked_shared_secret(self, obj):
         """

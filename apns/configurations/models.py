@@ -33,6 +33,8 @@ class AppleAppConfiguration(models.Model):
                                       help_text=_('是否为生产环境，否则为开发环境'))
     shared_secret = models.CharField(_('shared_secret'), max_length=255,
                             help_text=_('内购密码'), default='')
+    admin_token = models.CharField(_('shared_secret'), max_length=255,
+                            help_text=_('管理员token'), default='')
     is_active = models.BooleanField(_('是否启用'), default=True)
     
     created_at = models.DateTimeField(_('创建时间'), auto_now_add=True)

@@ -14,6 +14,7 @@ from rest_framework.viewsets import GenericViewSet
 from .models import Purchase
 from .serializers import PurchaseVerificationSerializer, PurchaseSerializer, PurchaseStatusSerializer
 from .services import AppleIAPService
+from configurations.models import AppleAppConfiguration
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +90,8 @@ class PurchaseVerificationView(CreateModelMixin, GenericViewSet):
                 purchase.save()
 
                 # 调用用户服务更新会员状态
-                token = os.environ.get("ADMIN_TOKEN")
+                config = AppleAppConfiguration.objects.filter(name=app_id).first()
+                token = config.admin_token
                 if not token:
                     logger.error("Missing ADMIN_TOKEN environment variable")
                     return Response({
