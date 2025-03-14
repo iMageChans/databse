@@ -9,7 +9,6 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from assistant.models import UsersAssistantTemplates
 from engines.models import Engines
-from django.core.exceptions import ObjectDoesNotExist
 
 
 class AgentViewSet(CreateModelMixin,
@@ -60,39 +59,19 @@ class AgentViewSet(CreateModelMixin,
         engine = Engines.objects.get(name=model_name)
 
         try:
-            # 场景1：提供模板ID且是高级用户
             if user_template_id and is_premium:
-                template = UsersAssistantTemplates.objects.get(
-                    user_id=user_id,
-                    id=user_template_id,
-                    is_premium_template=True
-                )
-                custom_prompt = template.prompt_template, None
-
-            # 场景2：提供模板ID且非高级用户
+                user_template = UsersAssistantTemplates.objects.get(user_id=user_id, id=user_template_id,
+                                                                    is_premium_template=True)
+                custom_prompt = user_template.prompt_template
             elif user_template_id and not is_premium:
-                template = UsersAssistantTemplates.objects.get(
-                    user_id=user_id,
-                    id=user_template_id,
-                    is_premium_template=False
-                )
-                custom_prompt = template.prompt_template, None
-
-            # 场景3：未提供模板ID，尝试获取默认模板
-            else:
-                try:
-                    template = UsersAssistantTemplates.objects.get(
-                        user_id=user_id,
-                        is_default=True
-                    )
-                    custom_prompt = template.prompt_template, None
-                except ObjectDoesNotExist:
-                    error = "用户未设置默认模板"
-
-        except ObjectDoesNotExist as e:
-            error = f"指定模板不存在: {str(e)}"
-        except Exception as e:
-            error = f"系统错误: {str(e)}"
+                user_template = UsersAssistantTemplates.objects.get(user_id=user_id, id=user_template_id,
+                                                                    is_premium_template=False)
+                custom_prompt = user_template.prompt_template
+            elif user_template_id and not is_premium:
+                user_template = UsersAssistantTemplates.objects.get(user_id=user_id, is_default=True)
+                custom_prompt = user_template.prompt_template
+        except:
+            pass  # 如果出错，使用默认模板
 
         assistant = AccountingAssistant(
             api_key=engine.api_key,
