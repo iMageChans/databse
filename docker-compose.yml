@@ -64,7 +64,8 @@ services:
       context: ./PocketAi
       dockerfile: Dockerfile
     container_name: pocket-service
-    restart: unless-stopped
+    command: [ "sleep", "infinity" ]  # 关键修改
+    restart: "no"
     environment:
       - DJANGO_SETTINGS_MODULE=PocketAi.settings
       - PYTHONPATH=/app
@@ -78,10 +79,10 @@ services:
       - /var/www/static/pocket-service:/app/staticfiles
       - /var/www/static/pocket-service:/app/media
       - ./templates/pocket-service:/app/templates
-    command: >
-      sh -c "python manage.py migrate &&
-             python manage.py collectstatic --noinput &&
-             gunicorn --bind 0.0.0.0:8002 PocketAi.wsgi:application"
+#    command: >
+#      sh -c "python manage.py migrate &&
+#             python manage.py collectstatic --noinput &&
+#             gunicorn --bind 0.0.0.0:8002 PocketAi.wsgi:application"
     ports:
       - "8002:8002"
     networks:
