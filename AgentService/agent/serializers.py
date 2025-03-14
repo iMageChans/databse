@@ -2,12 +2,12 @@ from rest_framework import serializers
 
 
 class AgentInputSerializer(serializers.Serializer):
-    assistant_name = serializers.CharField(required=True, help_text="助手名称")
+    assistant_name = serializers.CharField(required=False, help_text="助手名称")
     model_name = serializers.CharField(required=True, help_text="模型名称")
     users_input = serializers.CharField(required=True, help_text="用户输入内容")
     language = serializers.CharField(required=True, help_text="语言")
-    user_template_id = serializers.CharField(required=False, allow_blank=True, allow_null=True, help_text="模板id")
-    
+    user_template_id = serializers.CharField(allow_blank=True, allow_null=True, help_text="模板id")
+
     def validate_assistant_name(self, value):
         from assistant.models import Assistant
         try:
@@ -15,7 +15,7 @@ class AgentInputSerializer(serializers.Serializer):
         except Assistant.DoesNotExist:
             raise serializers.ValidationError(f"找不到名为 '{value}' 的活跃助手")
         return value
-    
+
     def validate_model_name(self, value):
         from engines.models import Engines
         try:
