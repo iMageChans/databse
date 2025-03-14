@@ -67,7 +67,7 @@ class AgentViewSet(CreateModelMixin,
                     id=user_template_id,
                     is_premium_template=True
                 )
-                return template.prompt_template, None
+                custom_prompt = template.prompt_template, None
 
             # 场景2：提供模板ID且非高级用户
             elif user_template_id and not is_premium:
@@ -76,7 +76,7 @@ class AgentViewSet(CreateModelMixin,
                     id=user_template_id,
                     is_premium_template=False
                 )
-                return template.prompt_template, None
+                custom_prompt = template.prompt_template, None
 
             # 场景3：未提供模板ID，尝试获取默认模板
             else:
@@ -85,7 +85,7 @@ class AgentViewSet(CreateModelMixin,
                         user_id=user_id,
                         is_default=True
                     )
-                    return template.prompt_template, None
+                    custom_prompt = template.prompt_template, None
                 except ObjectDoesNotExist:
                     error = "用户未设置默认模板"
 
