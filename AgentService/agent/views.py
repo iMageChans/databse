@@ -58,6 +58,9 @@ class AgentViewSet(CreateModelMixin,
 
         engine = Engines.objects.get(name=model_name)
 
+        logger.info(f"当前engine.name: {engine.name}")
+        logger.info(f"当前engine.base_url: {engine.base_url}")
+
         try:
             if user_template_id and is_premium:
                 user_template = UsersAssistantTemplates.objects.get(user_id=user_id, id=user_template_id,

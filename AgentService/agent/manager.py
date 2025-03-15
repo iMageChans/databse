@@ -128,7 +128,7 @@ class AccountingAssistant:
         # 设置语言
         self.language = language
 
-        print(base_url)
+        logger.info(f"当前bas_url: {base_url}")
 
         # 初始化LLM
         self.llm = ChatOpenAI(
