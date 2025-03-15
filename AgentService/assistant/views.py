@@ -51,11 +51,11 @@ class AssistantViewSet(ListModelMixin,
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
-        
+
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
-        
+
         serializer = self.get_serializer(queryset, many=True)
         return api_response(data={
             "results": serializer.data,
@@ -97,11 +97,11 @@ class AssistantTemplatesViewSet(ListModelMixin,
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
-        
+
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
-        
+
         serializer = self.get_serializer(queryset, many=True)
         return api_response(data=serializer.data)
 
@@ -132,26 +132,32 @@ class AssistantsConfigsViewSet(ListModelMixin,
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
-        
+
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
-        
+
         serializer = self.get_serializer(queryset, many=True)
         return api_response(data=serializer.data)
-    
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return api_response(code=status.HTTP_201_CREATED, data=serializer.data)
-    
+
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
-        return api_response(data=serializer.data)
-    
+        return Response({
+            'code': 200,
+            'msg': '获取成功',
+            'data': {
+                "results": serializer.data,
+            }
+        }, status=status.HTTP_200_OK)
+
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
@@ -159,7 +165,7 @@ class AssistantsConfigsViewSet(ListModelMixin,
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return api_response(data=serializer.data)
-    
+
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         self.perform_destroy(instance)
@@ -180,18 +186,18 @@ class AssistantsConfigsViewSet(ListModelMixin,
             # 过滤关系字段
             free_relationships = RELATIONSHIP_OPTIONS['free']
             relationship_filter = models.Q(relationship__in=free_relationships)
-            
+
             # 过滤昵称字段
             free_nicknames = NICKNAME_OPTIONS['free']
             nickname_filter = models.Q(nickname__in=free_nicknames)
-            
+
             # 过滤性格字段
             free_personalities = PERSONALITY_OPTIONS['free']
             personality_filter = models.Q(personality__in=free_personalities)
-            
+
             # 组合过滤条件
             queryset = queryset.filter(relationship_filter & nickname_filter & personality_filter)
-            
+
         return queryset
 
     def get_serializer_context(self):
@@ -230,17 +236,17 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
         """
         user_id = request.remote_user.get('id')
         template = UsersAssistantTemplates.objects.filter(user_id=user_id).first()
-        
+
         if template:
             serializer = self.get_serializer(template)
             return api_response(data=[serializer.data])
         return api_response(data=[])
-    
+
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         return api_response(data=serializer.data)
-    
+
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
@@ -278,22 +284,22 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
 
             # 检查是否包含付费字段
             is_premium = False
-            
+
             # 从常量中获取付费选项列表
             from assistant.constants import (
                 PREMIUM_RELATIONSHIP_OPTIONS,
                 PREMIUM_NICKNAME_OPTIONS,
                 PREMIUM_PERSONALITY_OPTIONS
             )
-            
+
             # 检查关系是否是付费选项
             if config.relationship in PREMIUM_RELATIONSHIP_OPTIONS:
                 is_premium = True
-                
+
             # 检查昵称是否是付费选项
             if config.nickname in PREMIUM_NICKNAME_OPTIONS:
-                is_premium = True
-                
+                True
+
             # 检查性格是否是付费选项
             if config.personality in PREMIUM_PERSONALITY_OPTIONS:
                 is_premium = True
@@ -303,7 +309,7 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
 
             # 创建用户模板
             user_id = request.remote_user.get('id')
-            
+
             # 如果设置为默认，将其他模板设置为非默认
             if is_default:
                 UsersAssistantTemplates.objects.filter(user_id=user_id).update(is_default=False)
@@ -415,7 +421,7 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
                 code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 msg=f"创建默认模板失败: {str(e)}"
             )
-    
+
     def generate_prompt(self, template, config):
         """
         将配置信息嵌入到模板中
@@ -428,13 +434,13 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
             'greeting': config.greeting or '',
             'dialogue_style': config.dialogue_style or ''
         }
-        
+
         # 替换模板中的变量
         prompt = template
         for key, value in variables.items():
             placeholder = f"{{{key}}}"
             prompt = prompt.replace(placeholder, value)
-        
+
         return prompt
 
 
@@ -461,37 +467,37 @@ class OptionsViewSet(ListModelMixin,
         获取可用的配置选项，所有用户都能看到所有选项，但会标识哪些是付费选项
         """
         is_premium = request.remote_user.get('is_premium', False)
-        
+
         # 构建带有付费标识的选项
         relationship_options = [
-            {"value": option, "is_premium": False} for option in RELATIONSHIP_OPTIONS['free']
-        ] + [
-            {"value": option, "is_premium": True} for option in RELATIONSHIP_OPTIONS['premium']
-        ] + [
-            {"value": "Customization", "is_premium": True}
-        ]
-        
+                                   {"value": option, "is_premium": False} for option in RELATIONSHIP_OPTIONS['free']
+                               ] + [
+                                   {"value": option, "is_premium": True} for option in RELATIONSHIP_OPTIONS['premium']
+                               ] + [
+                                   {"value": "Customization", "is_premium": True}
+                               ]
+
         nickname_options = [
-            {"value": option, "is_premium": False} for option in NICKNAME_OPTIONS['free']
-        ] + [
-            {"value": option, "is_premium": True} for option in NICKNAME_OPTIONS['premium']
-        ] + [
-            {"value": "Customization", "is_premium": True}
-        ]
-        
+                               {"value": option, "is_premium": False} for option in NICKNAME_OPTIONS['free']
+                           ] + [
+                               {"value": option, "is_premium": True} for option in NICKNAME_OPTIONS['premium']
+                           ] + [
+                               {"value": "Customization", "is_premium": True}
+                           ]
+
         personality_options = [
-            {"value": option, "is_premium": False} for option in PERSONALITY_OPTIONS['free']
-        ] + [
-            {"value": option, "is_premium": True} for option in PERSONALITY_OPTIONS['premium']
-        ] + [
-            {"value": "Customization", "is_premium": True}
-        ]
-        
+                                  {"value": option, "is_premium": False} for option in PERSONALITY_OPTIONS['free']
+                              ] + [
+                                  {"value": option, "is_premium": True} for option in PERSONALITY_OPTIONS['premium']
+                              ] + [
+                                  {"value": "Customization", "is_premium": True}
+                              ]
+
         data = {
             'relationship': relationship_options,
             'nickname': nickname_options,
             'personality': personality_options,
             'user_is_premium': is_premium
         }
-        
+
         return api_response(data=data)

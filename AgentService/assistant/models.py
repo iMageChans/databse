@@ -68,3 +68,27 @@ class UsersAssistantTemplates(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        # 如果当前模板被设置为默认模板
+        if self.is_default and self.user_id is not None:
+            # 将该用户的所有其他模板设置为非默认
+            UsersAssistantTemplates.objects.filter(
+                user_id=self.user_id, 
+                is_default=True
+            ).exclude(
+                pk=self.pk
+            ).update(is_default=False)
+        # 确保用户至少有一个默认模板
+        elif not self.is_default and self.user_id is not None:
+            # 检查用户是否还有其他默认模板
+            other_defaults = UsersAssistantTemplates.objects.filter(
+                user_id=self.user_id,
+                is_default=True
+            ).exclude(pk=self.pk).exists()
+            
+            # 如果没有其他默认模板，则将当前模板设为默认
+            if not other_defaults:
+                self.is_default = True
+                
+        super().save(*args, **kwargs)
