@@ -103,7 +103,13 @@ class AssistantTemplatesViewSet(ListModelMixin,
             return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(queryset, many=True)
-        return api_response(data=serializer.data)
+        return Response({
+            'code': 200,
+            'msg': '获取成功',
+            'data': {
+                "results": serializer.data,
+            }
+        }, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
         operation_summary="获取助手模板详情",
@@ -138,7 +144,13 @@ class AssistantsConfigsViewSet(ListModelMixin,
             return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(queryset, many=True)
-        return api_response(data=serializer.data)
+        return Response({
+            'code': 200,
+            'msg': '获取成功',
+            'data': {
+                "results": serializer.data,
+            }
+        }, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -150,13 +162,7 @@ class AssistantsConfigsViewSet(ListModelMixin,
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
-        return Response({
-            'code': 200,
-            'msg': '获取成功',
-            'data': {
-                "results": serializer.data,
-            }
-        }, status=status.HTTP_200_OK)
+        return api_response(data=serializer.data)
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
@@ -239,8 +245,20 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
 
         if template:
             serializer = self.get_serializer(template)
-            return api_response(data=[serializer.data])
-        return api_response(data=[])
+            return Response({
+            'code': 200,
+            'msg': '获取成功',
+            'data': {
+                "results": serializer.data,
+            }
+        }, status=status.HTTP_200_OK)
+        return Response({
+            'code': 200,
+            'msg': '获取成功',
+            'data': {
+                "results": [],
+            }
+        }, status=status.HTTP_200_OK)
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -470,28 +488,28 @@ class OptionsViewSet(ListModelMixin,
 
         # 构建带有付费标识的选项
         relationship_options = [
-                                   {"value": option, "is_premium": False} for option in RELATIONSHIP_OPTIONS['free']
-                               ] + [
-                                   {"value": option, "is_premium": True} for option in RELATIONSHIP_OPTIONS['premium']
-                               ] + [
-                                   {"value": "Customization", "is_premium": True}
-                               ]
+            {"value": option, "is_premium": False} for option in RELATIONSHIP_OPTIONS['free']
+        ] + [
+            {"value": option, "is_premium": True} for option in RELATIONSHIP_OPTIONS['premium']
+        ] + [
+            {"value": "Customization", "is_premium": True}
+        ]
 
         nickname_options = [
-                               {"value": option, "is_premium": False} for option in NICKNAME_OPTIONS['free']
-                           ] + [
-                               {"value": option, "is_premium": True} for option in NICKNAME_OPTIONS['premium']
-                           ] + [
-                               {"value": "Customization", "is_premium": True}
-                           ]
+            {"value": option, "is_premium": False} for option in NICKNAME_OPTIONS['free']
+        ] + [
+            {"value": option, "is_premium": True} for option in NICKNAME_OPTIONS['premium']
+        ] + [
+            {"value": "Customization", "is_premium": True}
+        ]
 
         personality_options = [
-                                  {"value": option, "is_premium": False} for option in PERSONALITY_OPTIONS['free']
-                              ] + [
-                                  {"value": option, "is_premium": True} for option in PERSONALITY_OPTIONS['premium']
-                              ] + [
-                                  {"value": "Customization", "is_premium": True}
-                              ]
+            {"value": option, "is_premium": False} for option in PERSONALITY_OPTIONS['free']
+        ] + [
+            {"value": option, "is_premium": True} for option in PERSONALITY_OPTIONS['premium']
+        ] + [
+            {"value": "Customization", "is_premium": True}
+        ]
 
         data = {
             'relationship': relationship_options,
