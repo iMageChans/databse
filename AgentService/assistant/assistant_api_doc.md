@@ -480,6 +480,31 @@
 }
 ```
 
+### 5.6 恢复默认设置
+
+**请求**
+- 方法: `POST`
+- 路径: `/users-assistant-templates/restore_default/`
+- 描述: 将用户的助手模板恢复为系统默认设置
+
+**响应示例**
+```json
+{
+  "code": 200,
+  "msg": "成功恢复默认设置",
+  "data": {
+    "id": 1,
+    "user_id": 1,
+    "name": "默认模板",
+    "prompt_template": "默认提示词",
+    "is_premium_template": false,
+    "is_default": true,
+    "created_at": "2023-01-01T00:00:00Z",
+    "updated_at": "2023-01-01T00:00:00Z"
+  }
+}
+```
+
 ## 6. 选项管理 (Options)
 
 ### 6.1 获取配置选项
