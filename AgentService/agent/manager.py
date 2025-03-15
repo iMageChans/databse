@@ -136,7 +136,9 @@ class AccountingAssistant:
             temperature=temperature,
             max_tokens=512,
             base_url=base_url,
-            api_key=self.api_key
+            api_key=self.api_key,
+            stream_usage=False,
+            streaming=False,
         )
 
         # 会话链缓存
