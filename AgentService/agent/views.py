@@ -78,6 +78,7 @@ class AgentViewSet(CreateModelMixin,
 
         assistant = AccountingAssistant(
             api_key=engine.api_key,
+            base_url=engine.base_url,
             redis_url="redis://redis:6379/0",
             timezone=user_timezone,
             model=engine.name,
