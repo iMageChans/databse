@@ -137,8 +137,8 @@ class AccountingAssistant:
             max_tokens=512,
             base_url=base_url,
             api_key=self.api_key,
-            stream_usage=False,
-            streaming=False,
+            stream_usage=True,
+            streaming=True,
         )
 
         # 会话链缓存
