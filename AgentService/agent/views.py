@@ -84,6 +84,8 @@ class AgentViewSet(CreateModelMixin,
 
         result = assistant.process_input(user_input=users_input, session_id=str(user_id), ai_config=custom_prompt)
 
+        print(result)
+
         response_content = result['response']
 
         # 处理响应内容
