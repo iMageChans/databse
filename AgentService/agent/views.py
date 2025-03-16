@@ -10,7 +10,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from assistant.models import UsersAssistantTemplates, AssistantTemplates
 from engines.models import Engines
-from assistants.models import AssistantsConfigs
+from assistant.models import AssistantsConfigs
 
 
 class AgentViewSet(CreateModelMixin,
