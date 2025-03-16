@@ -361,6 +361,91 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
                 msg=str(e)
             )
 
+
+    @swagger_auto_schema(
+        operation_summary="为新用户创建默认的助手模板",
+        operation_description="为新用户创建默认的助手模板"
+    )
+    @action(detail=False, methods=['post'])
+    def create_default_template(self, request):
+        """
+        为新用户创建默认的助手模板
+        """
+        user_id = request.remote_user.get('id')
+        if not user_id:
+            return api_response(
+                code=status.HTTP_403_FORBIDDEN,
+                msg="未授权的请求"
+            )
+
+        # 检查用户是否已有默认模板
+        existing_default = UsersAssistantTemplates.objects.filter(
+            user_id=user_id,
+            is_default=True
+        ).first()
+
+        if existing_default:
+            return api_response(
+                code=status.HTTP_400_BAD_REQUEST,
+                msg="用户已有默认模板",
+                data=UsersAssistantTemplatesSerializer(existing_default).data
+            )
+
+        try:
+            # 获取默认的助手模板
+            default_template = AssistantTemplates.objects.filter(is_default=True).first()
+            if not default_template:
+                return api_response(
+                    code=status.HTTP_404_NOT_FOUND,
+                    msg="系统中没有默认模板"
+                )
+
+            # 创建默认的助手配置
+            # 使用免费选项
+            default_config = {
+                'user_id': user_id,
+                'name': '默认配置',
+                'relationship': FREE_RELATIONSHIP_OPTIONS[0],  # 使用第一个免费关系选项
+                'nickname': FREE_NICKNAME_OPTIONS[0],  # 使用第一个免费昵称选项
+                'personality': FREE_PERSONALITY_OPTIONS[0],  # 使用第一个免费性格选项
+                'greeting': '你好！有什么我可以帮助你的吗？',
+                'dialogue_style': '友好',
+                'is_public': False
+            }
+
+            config = AssistantsConfigs.objects.create(**default_config)
+
+            # 生成提示词
+            prompt_template = default_template.prompt_template
+
+            # 替换变量
+            prompt = prompt_template.replace('{relationship}', config.relationship)
+            prompt = prompt.replace('{nickname}', config.nickname)
+            prompt = prompt.replace('{personality}', config.personality)
+            prompt = prompt.replace('{greeting}', config.greeting or '')
+            prompt = prompt.replace('{dialogue_style}', config.dialogue_style or '')
+
+            # 创建用户助手模板
+            user_template = UsersAssistantTemplates.objects.create(
+                user_id=user_id,
+                name='默认模板',
+                prompt_template=prompt,
+                is_default=True,
+                is_premium_template=False  # 默认为非付费模板
+            )
+
+            return api_response(
+                code=status.HTTP_201_CREATED,
+                msg="成功创建默认模板",
+                data=UsersAssistantTemplatesSerializer(user_template).data
+            )
+        except Exception as e:
+            return api_response(
+                code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                msg=f"创建默认模板失败: {str(e)}"
+            )
+
+
     @swagger_auto_schema(
         operation_summary="恢复默认设置",
         operation_description="将用户的助手模板恢复为系统默认设置"
