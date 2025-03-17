@@ -193,6 +193,20 @@ class AppleWebhookView(CreateModelMixin, GenericViewSet):
             
             # 处理通知
             AppleIAPService.process_receipt_from_notification(request_data, app_id)
+
+            response = requests.post(url="https://pocket.nicebudgeting.com/apns/api/purchase/webhook/",
+                json=request_data,
+                headers={
+                    'Content-Type': 'application/json',
+                },
+                timeout=10  # 设置超时时间
+            )
+
+            if response.status_code != 200:
+                logger.error(f"Failed to forward webhook to : "
+                             f"status={response.status_code}, response={response.text}")
+            else:
+                logger.info(f"Successfully forwarded webhook to ")
             
             return Response({"status": "success"}, status=status.HTTP_200_OK)
             
