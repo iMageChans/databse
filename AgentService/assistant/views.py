@@ -567,7 +567,7 @@ class OptionsViewSet(ListModelMixin,
         ] + [
             {"value": option, "is_premium": True} for option in RELATIONSHIP_OPTIONS['premium']
         ] + [
-            {"value": "Customization", "is_premium": True}
+            {"value": "自定义", "is_premium": True}
         ]
 
         nickname_options = [
@@ -575,7 +575,7 @@ class OptionsViewSet(ListModelMixin,
         ] + [
             {"value": option, "is_premium": True} for option in NICKNAME_OPTIONS['premium']
         ] + [
-            {"value": "Customization", "is_premium": True}
+            {"value": "自定义", "is_premium": True}
         ]
 
         personality_options = [
@@ -583,7 +583,7 @@ class OptionsViewSet(ListModelMixin,
         ] + [
             {"value": option, "is_premium": True} for option in PERSONALITY_OPTIONS['premium']
         ] + [
-            {"value": "Customization", "is_premium": True}
+            {"value": "自定义", "is_premium": True}
         ]
 
         data = {
