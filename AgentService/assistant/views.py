@@ -404,7 +404,7 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
             # 使用免费选项
             default_config = {
                 'user_id': user_id,
-                'name': '默认配置',
+                'name': 'Alice',
                 'relationship': FREE_RELATIONSHIP_OPTIONS[0],  # 使用第一个免费关系选项
                 'nickname': FREE_NICKNAME_OPTIONS[0],  # 使用第一个免费昵称选项
                 'personality': FREE_PERSONALITY_OPTIONS[0],  # 使用第一个免费性格选项
@@ -477,7 +477,7 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
             # 创建默认的助手配置
             default_config = {
                 'user_id': user_id,
-                'name': '默认配置',
+                'name': 'Alice',
                 'relationship': FREE_RELATIONSHIP_OPTIONS[0],
                 'nickname': FREE_NICKNAME_OPTIONS[0],
                 'personality': FREE_PERSONALITY_OPTIONS[0],
@@ -487,7 +487,7 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
             }
 
             # 删除用户现有的默认配置
-            AssistantsConfigs.objects.filter(user_id=user_id, name='默认配置').delete()
+            AssistantsConfigs.objects.filter(user_id=user_id, name='Alice').delete()
             
             # 创建新的默认配置
             config = AssistantsConfigs.objects.create(**default_config)
