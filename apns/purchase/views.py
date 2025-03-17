@@ -106,7 +106,7 @@ class PurchaseVerificationView(CreateModelMixin, GenericViewSet):
 
                 try:
                     rsp = requests.post(
-                        url=f"https://pocket.pulseheath.com/users/api/users/{user_id}/update_premium_status/",
+                        url=f"https://pocket.nicebudgeting.com/users/api/users/{user_id}/update_premium_status/",
                         json=param,  # 使用json参数而不是data
                         headers={
                             'Content-Type': 'application/json',
