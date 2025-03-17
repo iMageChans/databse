@@ -118,8 +118,6 @@ class AgentViewSet(CreateModelMixin,
 
         logger.info(f"参数engine.name: {engine.name}")
         logger.info(f"参数engine.base_url: {engine.base_url}")
-        print(engine.name)
-        print(engine.base_url)
 
         assistant = AccountingAssistant(
             api_key=engine.api_key,
