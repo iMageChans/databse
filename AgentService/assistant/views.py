@@ -487,7 +487,7 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
             }
 
             # 删除用户现有的默认配置
-            AssistantsConfigs.objects.filter(user_id=user_id, name='默认配置').delete()
+            AssistantsConfigs.objects.filter(user_id=user_id, name='Alice').delete()
             
             # 创建新的默认配置
             config = AssistantsConfigs.objects.create(**default_config)
