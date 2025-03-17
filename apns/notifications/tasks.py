@@ -10,32 +10,32 @@ from .services import NotificationScheduleService
 # 定义每周的通知内容
 WEEKLY_NOTIFICATIONS = {
     0: {  # 周一
-        "title": "Money Flows, Joy Grows! ✨",
-        "body": "Feel good about today's progress—log it in and savor the journey."
+        "title": "财源滚滚，欢乐连连！✨",
+        "body": "为今天的进步感到开心——立即记录，享受旅程"
     },
     1: {  # 周二
-        "title": "Consistency Is Key! 🔑",
-        "body": "Small wins make big impacts. Log today and let success unfold!"
+        "title": "坚持是关键！🔑",
+        "body": "小胜利带来大影响，记录今天让成功自然展开！"
     },
     2: {  # 周三
-        "title": "Dream Fund Fuel! 🌈",
-        "body": "Closer to your happy place! Log today and keep your dreams alive."
+        "title": "梦想基金加油！🌈",
+        "body": "离你的快乐天地更近了！立即记录，让梦想保持鲜活"
     },
     3: {  # 周四
-        "title": "One Step Closer! 🚀",
-        "body": "Joy is in the journey! Track today and feel your dreams within reach."
+        "title": "更近一步！🚀",
+        "body": "快乐就在旅程中！记录今天，感受梦想触手可及"
     },
     4: {  # 周五
-        "title": "Happiness Fund Alert! 😊",
-        "body": "Dreams come true one entry at a time. Add to your Dream Fund today!"
+        "title": "幸福基金提醒！😊",
+        "body": "梦想通过每次记录成真，今天也为梦想基金添砖加瓦吧！"
     },
     5: {  # 周六
-        "title": "Your Daily Power Move! 💪",
-        "body": "Today's choices, tomorrow's dreams. Log in and stay inspired!"
+        "title": "每日能量行动！💪",
+        "body": "今日选择成就明日梦想，立即记录保持动力！"
     },
     6: {  # 周日
-        "title": "Goals in Sight! 👀​",
-        "body": "You're closer than you think. Record today's progress and stay on track!"
+        "title": "目标近在眼前！👀​",
+        "body": "你比想象的更接近目标，记录今日进展保持正轨！"
     }
 }
 

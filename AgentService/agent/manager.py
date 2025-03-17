@@ -89,7 +89,7 @@ class AccountingAssistant:
                  memory_ttl=24 * 3600,
                  log_level=logging.INFO,
                  prompt_template=None,
-                 language="en"):
+                 language="zh-cn"):
         """
         初始化记账助手
 
