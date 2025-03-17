@@ -404,12 +404,12 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
             # 使用免费选项
             default_config = {
                 'user_id': user_id,
-                'name': '默认配置',
+                'name': 'Alice',
                 'relationship': FREE_RELATIONSHIP_OPTIONS[0],  # 使用第一个免费关系选项
                 'nickname': FREE_NICKNAME_OPTIONS[0],  # 使用第一个免费昵称选项
                 'personality': FREE_PERSONALITY_OPTIONS[0],  # 使用第一个免费性格选项
-                'greeting': '你好！有什么我可以帮助你的吗？',
-                'dialogue_style': '友好',
+                'greeting': 'Hello! Is there anything I can help you with?',
+                'dialogue_style': 'friendly',
                 'is_public': False
             }
 
