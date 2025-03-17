@@ -40,6 +40,12 @@ class AppleAppConfiguration(models.Model):
     created_at = models.DateTimeField(_('创建时间'), auto_now_add=True)
     updated_at = models.DateTimeField(_('更新时间'), auto_now=True)
     
+    forward_webhook_urls = models.TextField(
+        blank=True, 
+        null=True,
+        help_text='其他地区的webhook URL，多个URL用逗号分隔'
+    )
+    
     class Meta:
         verbose_name = _('苹果应用配置')
         verbose_name_plural = _('苹果应用配置')

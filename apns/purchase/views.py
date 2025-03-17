@@ -15,6 +15,7 @@ from .models import Purchase
 from .serializers import PurchaseVerificationSerializer, PurchaseSerializer, PurchaseStatusSerializer
 from .services import AppleIAPService
 from configurations.models import AppleAppConfiguration
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -163,9 +164,45 @@ class PurchaseVerificationView(CreateModelMixin, GenericViewSet):
 
 class AppleWebhookView(CreateModelMixin, GenericViewSet):
     """
-    处理来自Apple的服务器通知
+    处理来自Apple的服务器通知，并转发给其他地区服务
     """
-    permission_classes = [permissions.AllowAny]  # Apple服务器通知无需认证
+    permission_classes = [permissions.AllowAny]
+
+    def _forward_to_other_regions(self, request_data, app_id):
+        """
+        转发通知到其他地区的服务
+        """
+        try:
+            # 从配置中获取其他地区的服务地址
+            app_config = AppleAppConfiguration.objects.get(name=app_id)
+            forward_urls = app_config.forward_webhook_urls.split(',') if app_config.forward_webhook_urls else []
+            
+            for url in forward_urls:
+                try:
+                    # 异步转发请求
+                    response = requests.post(
+                        url.strip(),
+                        json=request_data,
+                        headers={
+                            'Content-Type': 'application/json',
+                            'X-Forwarded-From': settings.REGION_NAME,  # 添加来源标识
+                        },
+                        timeout=10  # 设置超时时间
+                    )
+                    
+                    if response.status_code != 200:
+                        logger.error(f"Failed to forward webhook to {url}: "
+                                   f"status={response.status_code}, response={response.text}")
+                    else:
+                        logger.info(f"Successfully forwarded webhook to {url}")
+                        
+                except requests.RequestException as e:
+                    logger.error(f"Error forwarding webhook to {url}: {str(e)}")
+                    
+        except AppleAppConfiguration.DoesNotExist:
+            logger.error(f"App configuration not found for app_id: {app_id}")
+        except Exception as e:
+            logger.error(f"Error in webhook forwarding: {str(e)}")
 
     def create(self, request, *args, **kwargs):
         try:
@@ -185,14 +222,28 @@ class AppleWebhookView(CreateModelMixin, GenericViewSet):
             # 获取通知类型和应用ID
             notification_type = request_data.get('notification_type')
             app_id = request_data.get('app_id')
+            transaction_id = request_data.get('latest_receipt_info', {}).get('transaction_id')
             
-            if not notification_type or not app_id:
-                logger.error("Missing notification_type or app_id in webhook")
-                return Response({"status": "error", "message": "Missing required fields"}, 
-                               status=status.HTTP_400_BAD_REQUEST)
+            # 检查是否已处理过该交易
+            if transaction_id:
+                existing_purchase = Purchase.objects.filter(
+                    transaction_id=transaction_id,
+                    is_successful=True
+                ).first()
+                if existing_purchase:
+                    logger.info(f"Transaction {transaction_id} already processed successfully")
+                    return Response({"status": "success", "message": "Already processed"}, 
+                                  status=status.HTTP_200_OK)
             
             # 处理通知
             AppleIAPService.process_receipt_from_notification(request_data, app_id)
+            
+            # 转发通知到其他地区
+            self._forward_to_other_regions(request_data, app_id)
+            
+            # 在处理完成后记录结果
+            logger.info(f"Successfully processed notification: type={notification_type}, "
+                       f"app_id={app_id}, transaction_id={transaction_id}")
             
             return Response({"status": "success"}, status=status.HTTP_200_OK)
             

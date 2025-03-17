@@ -107,12 +107,15 @@ class PurchaseStatusSerializer(serializers.ModelSerializer):
 
 
 class AppleWebhookSerializer(serializers.Serializer):
-    """
-    苹果服务器通知序列化器
-    """
-    notification_type = serializers.CharField(required=True, help_text='通知类型')
-    app_id = serializers.CharField(required=True, help_text='应用ID')
-    latest_receipt = serializers.CharField(required=True, help_text='最新收据')
-    latest_receipt_info = serializers.JSONField(required=False, help_text='最新收据信息')
-    auto_renew_status = serializers.BooleanField(required=False, help_text='自动续订状态')
-    user_id = serializers.IntegerField(required=False, help_text='用户ID')
+    """验证苹果通知数据的序列化器"""
+    notification_type = serializers.CharField(required=True)
+    app_id = serializers.CharField(required=True)
+    latest_receipt = serializers.CharField(required=True)
+    latest_receipt_info = serializers.DictField(required=False)
+    
+    def validate_notification_type(self, value):
+        valid_types = ['INITIAL_BUY', 'DID_RENEW', 'CANCEL', 
+                      'DID_CHANGE_RENEWAL_STATUS']
+        if value not in valid_types:
+            raise serializers.ValidationError(f"Invalid notification type: {value}")
+        return value
