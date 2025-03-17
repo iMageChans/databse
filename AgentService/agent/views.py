@@ -117,7 +117,7 @@ class AgentViewSet(CreateModelMixin,
         engine = Engines.objects.get(name=model_name)
 
         logger.info(f"参数engine.name: {engine.name}")
-        logger.info(f"参数engine.base_url: {ngine.base_url}")
+        logger.info(f"参数engine.base_url: {engine.base_url}")
         print(engine.name)
         print(engine.base_url)
 
