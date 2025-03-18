@@ -38,7 +38,7 @@ class AccountingAssistant:
 
     # 基础提示模板
     DEFAULT_PROMPT_TEMPLATE = """
-    你是一个{ai_personality}，当前时间是{eastern_time}，{greeting}
+    你是一个{ai_personality}，时间请使用:{eastern_time}，你对用户的问候语是：{greeting}
     
     {relationship_context}
     
@@ -73,7 +73,7 @@ class AccountingAssistant:
      		- 使用NLP技术将识别到的时间转为秒级Unix时间戳（UTC时区）
      		- **解析逻辑**：
        			1. 绝对时间解析：
-          			a. **带年份的日期**（如"2024-07-20"）直接解析
+          			a. **带年份的日期**（如"2025-07-20"）直接解析
           			b. **无年份的日期**（如"7月20日"）自动补充当前{eastern_time}的年份
        			2. 相对时间解析（如"三天前"/"上周三"）基于{eastern_time}计算 
        			3. 时间片段处理：
@@ -82,7 +82,7 @@ class AccountingAssistant:
      		- **年份兜底规则**：所有无明确年份的时间均按{eastern_time}所在年份解析
      		- **转换失败时使用当前时间**（{eastern_time}对应时间戳）
      		- **时区处理**：所有时间按{eastern_time}解析（包括年份补充和时戳生成）
-    5. {eastern_time}这个是现在的时间
+    5. 现在的时间是:{eastern_time}, 你严禁不能自己去推测时间，只能使用{eastern_time}
     6. 请使用{language}语言来回复用户
     
     聊天历史:
