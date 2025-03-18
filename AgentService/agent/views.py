@@ -10,7 +10,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from assistant.models import UsersAssistantTemplates, AssistantTemplates
 from engines.models import Engines
-from assistant.models import AssistantsConfigs
+from assistant.models import AssistantsConfigs, Assistant
 
 
 class AgentViewSet(CreateModelMixin,
@@ -106,6 +106,8 @@ class AgentViewSet(CreateModelMixin,
 
         engine = Engines.objects.get(name=model_name)
 
+        base_assistant = Assistant.objects.filter().first()
+
         assistant = AccountingAssistant(
             api_key=engine.api_key,
             base_url=engine.base_url,
@@ -114,6 +116,7 @@ class AgentViewSet(CreateModelMixin,
             model=engine.name,
             memory_ttl=3600,
             language=language,
+            prompt_template=base_assistant.prompt_template,
         )
 
         result = assistant.process_input(user_input=users_input, session_id=str(user_id), ai_config=custom_prompt)

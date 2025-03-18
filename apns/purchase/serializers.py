@@ -78,7 +78,7 @@ class PurchaseStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Purchase
         fields = ['user_id', 'product_id', 'is_active', 'is_successful', 
-                 'purchase_date', 'expires_at', 'status', 'days_remaining', 
+                 'purchase_date', 'expires_at', 'days_remaining',
                  'is_expired', 'created_at', 'updated_at']
         read_only_fields = fields
     
