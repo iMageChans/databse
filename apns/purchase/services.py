@@ -130,13 +130,17 @@ class UserService:
             api_url = f"{settings.BASE_URL}/users/api/users/{user_id}/update_premium_status/"
 
             # 构建请求数据
-            data = {
-                "user_id": user_id,
-                "is_premium": is_premium
-            }
 
             if expires_at:
-                data["expires_at"] = expires_at
+                expires_at_str = expires_at.isoformat()
+            else:
+                expires_at_str = None
+
+            data = {
+                "user_id": user_id,
+                "is_premium": is_premium,
+                "expires_at": expires_at_str,
+            }
 
             logger.error(f"data: {data}")
 
