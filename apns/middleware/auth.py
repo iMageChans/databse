@@ -10,15 +10,21 @@ class TokenAuthMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
         self.auth_api_url = f"{settings.BASE_URL.rstrip('/')}/users/api/users/me/"
-        print(self.auth_api_url)
         self.exempt_paths = [
             '/users/api/auth/login/',
+            '/users/api/auth/register/',  # 添加注册接口
+            '/users/api/auth/refresh/',   # 添加刷新令牌接口
+            '/users/api/auth/verify/',    # 添加验证接口
+            '/apns/api/purchase/verify/', # 添加内购验证接口
+            '/apns/api/webhook/',         # 添加webhook接口
             '/admin/',
             '/openapi',
             '/static/',
             '/media/',
             '/swagger/',
-            '/redoc/'
+            '/redoc/',
+            '/health/',                   # 健康检查接口
+            '/metrics/'
         ]
 
     def __call__(self, request):
