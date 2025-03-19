@@ -69,7 +69,7 @@ class Purchase(models.Model):
         return f"用户ID:{self.user_id} - {self.product_id} - {'成功' if self.is_successful else '处理中'}"
 
     @classmethod
-    def verify_receipt(cls, receipt_data, sandbox=True, app_id='pocket_ai'):
+    def verify_receipt(cls, receipt_data, sandbox=settings.SANDBOX, app_id='pocket_ai'):
         """
         验证苹果收据
 

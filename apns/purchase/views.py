@@ -21,6 +21,7 @@ from django.utils import timezone
 from utils.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin
 from utils.permissions import IsAuthenticatedExternal
 from rest_framework.viewsets import GenericViewSet
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ class PurchaseVerificationView(CreateModelMixin, GenericViewSet):
 
         receipt_data = serializer.validated_data['receipt_data']
         user_id = serializer.validated_data['user_id']
-        sandbox = serializer.validated_data.get('sandbox', True)
+        sandbox = serializer.validated_data.get('sandbox', settings.SANDBOX)
         app_id = serializer.validated_data.get('app_id', 'pocket_ai')
 
         # 验证并处理收据

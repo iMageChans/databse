@@ -11,7 +11,7 @@ class PurchaseService:
     """购买服务类，处理与购买相关的业务逻辑"""
 
     @staticmethod
-    def verify_and_process_receipt(receipt_data, user_id, sandbox=False, app_id='pocket_ai'):
+    def verify_and_process_receipt(receipt_data, user_id, sandbox=settings.SANDBOX, app_id='pocket_ai'):
         """
         验证并处理苹果收据
 
