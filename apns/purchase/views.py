@@ -85,9 +85,16 @@ class AppleWebhookView(CreateModelMixin, GenericViewSet):
 
             complete_notification = parse_apple_notification(notification_data)
 
+            if 'notificationType' in complete_notification and 'version' in complete_notification and complete_notification['version'] == '2.0':
+                serializer = NotificationSerializer(data=complete_notification)
+            else:
+                # 旧格式通知，使用旧的序列化器
+                logger.warning("收到旧版格式通知，尝试使用旧格式处理")
+                from .serializers import OldNotificationSerializer
+                serializer = OldNotificationSerializer(data=complete_notification)
+
             logger.error(f"通知解析后数据: {complete_notification}")
 
-            serializer = NotificationSerializer(data=complete_notification)
             if not serializer.is_valid():
                 logger.error(f"通知数据无效: {serializer.errors}")
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
