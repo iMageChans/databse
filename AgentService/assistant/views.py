@@ -405,11 +405,11 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
             default_config = {
                 'user_id': user_id,
                 'name': 'Alice',
-                'relationship': FREE_RELATIONSHIP_OPTIONS[0],  # 使用第一个免费关系选项
-                'nickname': FREE_NICKNAME_OPTIONS[0],  # 使用第一个免费昵称选项
-                'personality': FREE_PERSONALITY_OPTIONS[0],  # 使用第一个免费性格选项
-                'greeting': 'Hello! Is there anything I can help you with?',
-                'dialogue_style': 'friendly',
+                'relationship': 'Planner',  # 使用第一个免费关系选项
+                'nickname': 'Buddy',  # 使用第一个免费昵称选项
+                'personality': 'Energetic & Upbeat',  # 使用第一个免费性格选项
+                'greeting': '',
+                'dialogue_style': '',
                 'is_public': False
             }
 
@@ -478,11 +478,11 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
             default_config = {
                 'user_id': user_id,
                 'name': 'Alice',
-                'relationship': FREE_RELATIONSHIP_OPTIONS[0],
-                'nickname': FREE_NICKNAME_OPTIONS[0],
-                'personality': FREE_PERSONALITY_OPTIONS[0],
-                'greeting': 'Hello! Is there anything I can help you with?',
-                'dialogue_style': 'friendly',
+                'relationship': 'Planner',
+                'nickname': 'Buddy',
+                'personality': 'Energetic & Upbeat',
+                'greeting': '',
+                'dialogue_style': '',
                 'is_public': False
             }
 
