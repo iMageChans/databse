@@ -465,6 +465,7 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
         try:
             # 删除用户现有的所有模板
             UsersAssistantTemplates.objects.filter(user_id=user_id).delete()
+            AssistantsConfigs.objects.filter(user_id=user_id).delete()
 
             # 获取默认的助手模板
             default_template = AssistantTemplates.objects.filter(is_default=True).first()
