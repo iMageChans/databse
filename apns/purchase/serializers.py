@@ -1,121 +1,101 @@
 from rest_framework import serializers
-from django.utils import timezone
-from utils.serializers_fields import TimestampField
 from .models import Purchase
 
 
 class PurchaseSerializer(serializers.ModelSerializer):
-    """
-    购买记录序列化器
-    """
-    created_at = TimestampField(read_only=True)
-    updated_at = TimestampField(read_only=True)
-    # 添加剩余时间字段
-    days_remaining = serializers.SerializerMethodField()
-    # 添加状态显示字段
-    status_display = serializers.CharField(source='get_status_display', read_only=True)
-    
+    """购买记录序列化器"""
+
     class Meta:
         model = Purchase
         fields = '__all__'
-        read_only_fields = ['id', 'user_id', 'transaction_id', 'purchase_date', 
-                           'is_active', 'is_successful', 'created_at', 'updated_at',
-                           'days_remaining', 'status_display']
-    
-    def get_days_remaining(self, obj):
-        """
-        计算剩余天数
-        """
-        if not obj.expires_at:
-            return None
-            
-        now = timezone.now()
-        if now > obj.expires_at:
-            return 0
-            
-        delta = obj.expires_at - now
-        return delta.days
+        read_only_fields = ('created_at', 'updated_at')
 
 
-class PurchaseVerificationSerializer(serializers.Serializer):
-    """
-    购买验证序列化器
-    """
-    receipt_data = serializers.CharField(help_text='苹果收据数据')
-    user_id = serializers.IntegerField(help_text='用户ID')
-    product_id = serializers.CharField(help_text='产品ID')
-    transaction_id = serializers.CharField(help_text='交易ID')
-    app_id = serializers.CharField(help_text='应用ID')
-    original_transaction_id = serializers.CharField(required=False, help_text='原始交易ID，续订时使用')
-    
-    def validate_receipt_data(self, value):
-        """
-        验证收据数据不为空
-        """
-        if not value or len(value.strip()) == 0:
-            raise serializers.ValidationError("收据数据不能为空")
-        return value
-    
-    def validate_product_id(self, value):
-        """
-        验证产品ID是否为支持的类型
-        """
-        valid_products = ["Weekly_Subscription", "Monthly_Subscription", "Yearly_Subscription"]
-        if value not in valid_products:
-            raise serializers.ValidationError(f"不支持的产品类型: {value}，支持的类型: {', '.join(valid_products)}")
-        return value
+class VerifyReceiptSerializer(serializers.Serializer):
+    """验证收据请求序列化器"""
+    receipt_data = serializers.CharField(required=True, help_text='苹果收据数据')
+    user_id = serializers.IntegerField(required=True, help_text='用户ID')
+    sandbox = serializers.BooleanField(required=False, default=False, help_text='是否使用沙盒环境')
+    app_id = serializers.CharField(required=False, allow_null=True, help_text='应用ID')
 
 
-class PurchaseStatusSerializer(serializers.ModelSerializer):
-    """
-    购买状态序列化器，用于查询订阅状态
-    """
-    created_at = TimestampField(read_only=True)
-    updated_at = TimestampField(read_only=True)
-    days_remaining = serializers.SerializerMethodField()
-    is_expired = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = Purchase
-        fields = ['user_id', 'product_id', 'is_active', 'is_successful', 
-                 'purchase_date', 'expires_at', 'days_remaining',
-                 'is_expired', 'created_at', 'updated_at']
-        read_only_fields = fields
-    
-    def get_days_remaining(self, obj):
-        """
-        计算剩余天数
-        """
-        if not obj.expires_at:
-            return None
-            
-        now = timezone.now()
-        if now > obj.expires_at:
-            return 0
-            
-        delta = obj.expires_at - now
-        return delta.days
-    
-    def get_is_expired(self, obj):
-        """
-        判断是否已过期
-        """
-        if not obj.expires_at:
-            return True
-            
-        return timezone.now() > obj.expires_at
+class TransactionInfoSerializer(serializers.Serializer):
+    """交易信息序列化器"""
+    transactionId = serializers.CharField(required=True)
+    originalTransactionId = serializers.CharField(required=True)
+    webOrderLineItemId = serializers.CharField(required=False, allow_null=True)
+    bundleId = serializers.CharField(required=True)
+    productId = serializers.CharField(required=True)
+    purchaseDate = serializers.IntegerField(required=True)
+    originalPurchaseDate = serializers.IntegerField(required=True)
+    expiresDate = serializers.IntegerField(required=False, allow_null=True)
+    quantity = serializers.IntegerField(required=False, default=1)
+    type = serializers.CharField(required=False)
+    inAppOwnershipType = serializers.CharField(required=False)
+    signedDate = serializers.IntegerField(required=False)
+    environment = serializers.CharField(required=False)
+    transactionReason = serializers.CharField(required=False, allow_null=True)
+    price = serializers.IntegerField(required=False, allow_null=True)
+    currency = serializers.CharField(required=False, allow_null=True)
 
 
-class AppleWebhookSerializer(serializers.Serializer):
-    """验证苹果通知数据的序列化器"""
-    notification_type = serializers.CharField(required=True)
-    app_id = serializers.CharField(required=True)
-    latest_receipt = serializers.CharField(required=True)
-    latest_receipt_info = serializers.DictField(required=False)
-    
-    def validate_notification_type(self, value):
-        valid_types = ['INITIAL_BUY', 'DID_RENEW', 'CANCEL', 
-                      'DID_CHANGE_RENEWAL_STATUS']
-        if value not in valid_types:
-            raise serializers.ValidationError(f"Invalid notification type: {value}")
-        return value
+class RenewalInfoSerializer(serializers.Serializer):
+    """续订信息序列化器"""
+    originalTransactionId = serializers.CharField(required=True)
+    autoRenewProductId = serializers.CharField(required=False, allow_null=True)
+    productId = serializers.CharField(required=False)
+    autoRenewStatus = serializers.IntegerField(required=False)
+    renewalDate = serializers.IntegerField(required=False, allow_null=True)
+
+
+class NotificationDataSerializer(serializers.Serializer):
+    """通知数据序列化器"""
+    appAppleId = serializers.IntegerField(required=False)
+    bundleId = serializers.CharField(required=True)
+    environment = serializers.CharField(required=True)
+    transactionInfo = TransactionInfoSerializer(required=False)
+    renewalInfo = RenewalInfoSerializer(required=False)
+
+
+class NotificationSerializer(serializers.Serializer):
+    """苹果通知V2序列化器"""
+    notificationType = serializers.CharField(required=True, help_text='通知类型')
+    subtype = serializers.CharField(required=False, allow_null=True, help_text='通知子类型')
+    notificationUUID = serializers.CharField(required=True, help_text='通知UUID')
+    version = serializers.CharField(required=True, help_text='通知版本')
+    signedDate = serializers.IntegerField(required=True, help_text='签名时间')
+    data = NotificationDataSerializer(required=True, help_text='通知数据')
+
+    def validate(self, data):
+        """验证通知数据"""
+        notification_data = data.get('data', {})
+        if not notification_data.get('bundleId'):
+            raise serializers.ValidationError("缺少bundleId")
+
+        # 对于订阅相关的通知，需要验证交易信息
+        notification_type = data.get('notificationType')
+        if notification_type in ['DID_RENEW', 'DID_FAIL_TO_RENEW', 'EXPIRED',
+                                 'RENEWAL_EXTENDED', 'RENEWAL', 'REFUND', 'REVOKE']:
+            transaction_info = notification_data.get('transactionInfo')
+            if not transaction_info:
+                raise serializers.ValidationError("缺少transactionInfo")
+
+        return data
+
+
+class OldNotificationSerializer(serializers.Serializer):
+    """旧版苹果通知序列化器"""
+    notification_type = serializers.CharField(required=True, help_text='通知类型')
+    unified_receipt = serializers.DictField(required=True, help_text='统一收据信息')
+    auto_renew_status = serializers.BooleanField(required=False, help_text='自动续订状态')
+    auto_renew_product_id = serializers.CharField(required=False, allow_null=True, help_text='自动续订产品ID')
+    environment = serializers.CharField(required=False, help_text='环境（沙盒/生产）')
+
+    def validate(self, data):
+        """验证通知数据"""
+        unified_receipt = data.get('unified_receipt', {})
+        if not unified_receipt.get('latest_receipt'):
+            raise serializers.ValidationError("缺少latest_receipt")
+        if not unified_receipt.get('latest_receipt_info'):
+            raise serializers.ValidationError("缺少latest_receipt_info")
+        return data
