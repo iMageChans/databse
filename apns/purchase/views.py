@@ -64,10 +64,10 @@ class AppleWebhookView(CreateModelMixin, GenericViewSet):
 
     def create(self, request, *args, **kwargs):
         try:
-            logger.info("收到苹果服务器通知")
+            logger.error("收到苹果服务器通知")
 
             # 记录原始请求数据，便于调试
-            logger.debug(f"通知原始数据: {request.data}")
+            logger.error(f"通知原始数据: {request.data}")
 
             serializer = NotificationSerializer(data=request.data)
             if not serializer.is_valid():
