@@ -2,6 +2,7 @@ import base64
 import json
 
 import jwt
+import requests
 from rest_framework import status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -73,7 +74,7 @@ class AppleWebhookView(CreateModelMixin, GenericViewSet):
             # 记录原始请求数据，便于调试
             logger.error(f"通知原始数据: {request.data}")
 
-            request.post("https://pocket.nicebudgeting.com/apns/api/purchase/webhook", data=request.data)
+            requests.post("https://pocket.nicebudgeting.com/apns/api/purchase/webhook", data=request.data)
 
             signed_payload = request.data.get('signedPayload')
             if not signed_payload:
