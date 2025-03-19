@@ -121,8 +121,9 @@ class UserService:
             bool: 更新是否成功
         """
         try:
+            from django.conf import settings
             # 构建请求URL
-            api_url = "https://pocket.pulseheath.com/users/api/users/{user_id}/update_premium_status/"
+            api_url = f"{settings.BASE_URL}/users/api/users/{user_id}/update_premium_status/"
 
             # 如果expires_at是datetime对象，转换为ISO格式字符串
             if expires_at and isinstance(expires_at, datetime.datetime):
