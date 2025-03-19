@@ -404,12 +404,12 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
             # 使用免费选项
             default_config = {
                 'user_id': user_id,
-                'name': 'Alice',
-                'relationship': FREE_RELATIONSHIP_OPTIONS[0],  # 使用第一个免费关系选项
-                'nickname': FREE_NICKNAME_OPTIONS[0],  # 使用第一个免费昵称选项
-                'personality': FREE_PERSONALITY_OPTIONS[0],  # 使用第一个免费性格选项
-                'greeting': '你好！有什么我可以帮助你的吗？',
-                'dialogue_style': '友好',
+                'name': '小赞',
+                'relationship': '规划师',  # 使用第一个免费关系选项
+                'nickname': '知心财友',  # 使用第一个免费昵称选项
+                'personality': '元气炸裂',  # 使用第一个免费性格选项
+                'greeting': '',
+                'dialogue_style': '',
                 'is_public': False
             }
 
@@ -477,12 +477,12 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
             # 创建默认的助手配置
             default_config = {
                 'user_id': user_id,
-                'name': 'Alice',
-                'relationship': FREE_RELATIONSHIP_OPTIONS[0],
-                'nickname': FREE_NICKNAME_OPTIONS[0],
-                'personality': FREE_PERSONALITY_OPTIONS[0],
-                'greeting': '你好！有什么我可以帮助你的吗？',
-                'dialogue_style': '友好',
+                'name': '小赞',
+                'relationship': '规划师',
+                'nickname': '知心财友',
+                'personality': '元气炸裂',
+                'greeting': '',
+                'dialogue_style': '',
                 'is_public': False
             }
 
@@ -498,7 +498,7 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
             # 创建新的默认用户模板
             user_template = UsersAssistantTemplates.objects.create(
                 user_id=user_id,
-                name='默认模板',
+                name='小赞',
                 prompt_template=prompt,
                 is_default=True,
                 is_premium_template=False
