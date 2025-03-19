@@ -1,6 +1,5 @@
 import logging
 from django.conf import settings
-from .models import Purchase
 import requests
 import datetime
 from configurations.models import AppleAppConfiguration
@@ -12,7 +11,7 @@ class PurchaseService:
     """购买服务类，处理与购买相关的业务逻辑"""
 
     @staticmethod
-    def verify_and_process_receipt(receipt_data, user_id, sandbox=False, app_id=None):
+    def verify_and_process_receipt(receipt_data, user_id, sandbox=False, app_id='pocket_ai'):
         """
         验证并处理苹果收据
 
@@ -26,6 +25,9 @@ class PurchaseService:
             tuple: (成功标志, 结果或错误信息)
         """
         try:
+            # 避免循环导入
+            from purchase.models import Purchase
+
             # 验证收据
             verification_result = Purchase.verify_receipt(receipt_data, sandbox, app_id)
 
@@ -63,6 +65,7 @@ class PurchaseService:
             QuerySet: 有效的购买记录
         """
         from django.utils import timezone
+        from purchase.models import Purchase
 
         return Purchase.objects.filter(
             user_id=user_id,
@@ -84,6 +87,7 @@ class PurchaseService:
             tuple: (是否有有效订阅, 到期时间)
         """
         from django.utils import timezone
+        from purchase.models import Purchase
 
         query = {
             'user_id': user_id,
@@ -108,20 +112,20 @@ class UserService:
     """用户服务类，处理与用户中心的通信"""
 
     @staticmethod
-    def update_premium_status(user_id, is_premium, app_id, expires_at=None):
+    def update_premium_status(user_id, is_premium, app_id='pocket_ai', expires_at=None):
         """
         更新用户的会员状态
 
         Args:
             user_id: 用户ID
             is_premium: 是否是会员
+            app_id: 应用ID
             expires_at: 会员到期时间，可以是datetime对象或ISO格式的字符串
 
         Returns:
             bool: 更新是否成功
         """
         try:
-            from django.conf import settings
             # 构建请求URL
             api_url = f"{settings.BASE_URL}/users/api/users/{user_id}/update_premium_status/"
 
@@ -138,12 +142,15 @@ class UserService:
             if expires_at:
                 data["expires_at"] = expires_at
 
-            config = AppleAppConfiguration.objects.get(app_id=app_id)
-
-            # 获取API密钥（如果需要）
+            # 获取API密钥
             headers = {}
-            if hasattr(config, 'admin_token'):
-                headers['Authorization'] = f"Bearer {config.admin_token}"
+            if app_id:
+                try:
+                    config = AppleAppConfiguration.objects.get(app_id=app_id)
+                    if hasattr(config, 'admin_token'):
+                        headers['Authorization'] = f"{config.admin_token}"
+                except AppleAppConfiguration.DoesNotExist:
+                    logger.error(f"找不到应用 {app_id} 的配置")
 
             # 发送请求
             response = requests.post(

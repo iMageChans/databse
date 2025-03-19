@@ -7,7 +7,6 @@ from django.conf import settings
 from celery import shared_task
 from configurations.models import AppleAppConfiguration
 import logging
-from .services import UserService
 
 logger = logging.getLogger(__name__)
 
@@ -201,7 +200,7 @@ class Purchase(models.Model):
                     'is_active': True,
                     'is_successful': True,
                     'status': 'success',
-                    'notes': f"验证成功记录"
+                    'notes': f"验证成功"
                 }
             )
 
@@ -407,7 +406,7 @@ class Purchase(models.Model):
                         'is_successful': status == 'success',
                         'status': status,
                         'notification_type': notification_type,
-                        'notes': notes + (", 新建记录" if created else ", 更新记录")
+                        'notes': notes + ("成功创建")
                     }
                 )
 
@@ -425,6 +424,7 @@ class Purchase(models.Model):
         """根据购买记录更新用户权限"""
         try:
             from django.utils import timezone
+            from purchase.services import UserService
 
             # 获取用户所有有效的订阅，按产品分组
             active_subscriptions = {}
@@ -461,6 +461,7 @@ class Purchase(models.Model):
                 UserService.update_premium_status(
                     user_id=user_id,
                     is_premium=True,
+                    app_id=purchase.app_id,
                     expires_at=latest_expires_at
                 )
             else:
@@ -469,7 +470,8 @@ class Purchase(models.Model):
                 # 更新用户会员状态为无效
                 UserService.update_premium_status(
                     user_id=user_id,
-                    is_premium=False
+                    is_premium=False,
+                    app_id=purchase.app_id
                 )
 
         except Exception as e:
