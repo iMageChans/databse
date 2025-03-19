@@ -168,7 +168,7 @@ class UserService:
 
             result = response.json()
 
-            if result.get('success'):
+            if status_code == 200:
                 logger.error(f"成功更新用户 {user_id} 的会员状态: is_premium={is_premium}, expires_at={expires_at}")
                 return True
             else:
