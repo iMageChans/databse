@@ -75,7 +75,7 @@ class AppleWebhookView(CreateModelMixin, GenericViewSet):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
             # 异步处理通知
-            Purchase.process_notification.delay(serializer.validated_data)
+            Purchase.process_notification(serializer.validated_data)
 
             # 立即返回成功响应，避免苹果服务器重试
             return Response({
