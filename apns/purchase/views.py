@@ -44,8 +44,9 @@ class PurchaseVerificationView(CreateModelMixin, GenericViewSet):
 
         if not success:
             return Response({
-                'success': False,
-                'message': result
+                'code': 400,
+                'msg': 'success',
+                'data': result,
             }, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
