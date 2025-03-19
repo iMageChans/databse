@@ -164,7 +164,7 @@ class UserService:
             result = response.json()
 
             if result.get('success'):
-                logger.info(f"成功更新用户 {user_id} 的会员状态: is_premium={is_premium}, expires_at={expires_at}")
+                logger.error(f"成功更新用户 {user_id} 的会员状态: is_premium={is_premium}, expires_at={expires_at}")
                 return True
             else:
                 logger.error(f"更新用户 {user_id} 的会员状态失败: {result.get('message')}")

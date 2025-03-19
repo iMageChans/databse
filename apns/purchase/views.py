@@ -88,7 +88,7 @@ class AppleWebhookView(CreateModelMixin, GenericViewSet):
                 # 旧格式通知，使用旧的序列化器
                 logger.warning("收到旧版格式通知，尝试使用旧格式处理")
                 from .serializers import OldNotificationSerializer
-                serializer = OldNotificationSerializer(data=complete_notification)
+                serializer = OldNotificationSerializer(data=request.data)
 
             logger.error(f"通知解析后数据: {complete_notification}")
 
