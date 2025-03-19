@@ -146,7 +146,7 @@ class UserService:
             headers = {}
             if app_id:
                 try:
-                    config = AppleAppConfiguration.objects.get(app_id=app_id)
+                    config = AppleAppConfiguration.objects.get(name=app_id)
                     if hasattr(config, 'admin_token'):
                         headers['Authorization'] = f"{config.admin_token}"
                 except AppleAppConfiguration.DoesNotExist:

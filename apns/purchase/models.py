@@ -67,7 +67,7 @@ class Purchase(models.Model):
         return f"用户ID:{self.user_id} - {self.product_id} - {'成功' if self.is_successful else '处理中'}"
 
     @classmethod
-    def verify_receipt(cls, receipt_data, sandbox=False, app_id=None):
+    def verify_receipt(cls, receipt_data, sandbox=True, app_id='pocket_ai'):
         """
         验证苹果收据
 
@@ -90,7 +90,7 @@ class Purchase(models.Model):
             shared_secret = None
             if app_id:
                 try:
-                    config = AppleAppConfiguration.objects.get(app_id=app_id)
+                    config = AppleAppConfiguration.objects.get(name=app_id)
                     shared_secret = config.shared_secret
                 except AppleAppConfiguration.DoesNotExist:
                     logger.error(f"找不到应用 {app_id} 的配置")
