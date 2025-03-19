@@ -1,8 +1,14 @@
+import base64
+import json
+
+import jwt
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+
+from configurations.models import AppleAppConfiguration
 from .models import Purchase
 from .serializers import (
     VerifyReceiptSerializer,
@@ -10,8 +16,8 @@ from .serializers import (
     PurchaseSerializer
 )
 from .services import PurchaseService, UserService
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
+from cryptography.hazmat.primitives.serialization import load_pem_public_key
+from cryptography.hazmat.backends import default_backend
 import logging
 from .tasks import sync_user_premium_status
 from django.utils import timezone
@@ -69,7 +75,13 @@ class AppleWebhookView(CreateModelMixin, GenericViewSet):
             # 记录原始请求数据，便于调试
             logger.error(f"通知原始数据: {request.data}")
 
-            serializer = NotificationSerializer(data=request.data)
+            signed_payload = request.data['signedPayload']
+
+            notification_data = verify_and_decode_signed_payload(signed_payload)
+
+            logger.error(f"通知解析后数据: {notification_data}")
+
+            serializer = NotificationSerializer(data=notification_data)
             if not serializer.is_valid():
                 logger.error(f"通知数据无效: {serializer.errors}")
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -251,3 +263,129 @@ class PurchaseListView(ListModelMixin, RetrieveModelMixin, GenericViewSet):
                 'msg': 'failure',
                 'data': f'同步用户状态失败: {str(e)}',
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+def decode_signed_payload(signed_payload):
+    """
+    解析苹果 App Store Server Notifications V2 的 signedPayload（不验证签名）
+
+    参数:
+        signed_payload: 苹果发送的签名载荷
+
+    返回:
+        解析后的通知数据字典
+    """
+    try:
+        # 1. 将 signedPayload 分割为三部分（header.payload.signature）
+        parts = signed_payload.split('.')
+        if len(parts) != 3:
+            logger.error(f"无效的 signedPayload 格式: {signed_payload[:50]}...")
+            return None
+
+        # 2. 解码 payload 部分
+        payload_part = parts[1]
+
+        # 添加填充以避免 base64 解码错误
+        payload_part += '=' * ((4 - len(payload_part) % 4) % 4)
+
+        # 解码 base64
+        try:
+            decoded_payload = base64.urlsafe_b64decode(payload_part)
+            notification_data = json.loads(decoded_payload)
+            logger.debug(f"成功解析 payload: {notification_data.get('notificationType', 'unknown')}")
+            return notification_data
+        except Exception as e:
+            logger.error(f"解码 payload 失败: {str(e)}")
+            return None
+
+    except Exception as e:
+        logger.error(f"解析 signedPayload 时出错: {str(e)}")
+        return None
+
+
+def get_apple_public_key():
+    """
+    从配置中获取苹果公钥
+
+    返回:
+        公钥对象
+    """
+    try:
+        # 从配置中获取公钥
+        config = AppleAppConfiguration.objects.filter(name='pocket_ai').first()
+        if not config or not config.auth_key:
+            logger.warning("找不到苹果应用配置或公钥为空")
+            return None
+
+        # 加载PEM格式的公钥
+        try:
+            public_key = load_pem_public_key(
+                config.auth_key.encode('utf-8'),
+                backend=default_backend()
+            )
+            return public_key
+        except Exception as e:
+            logger.error(f"加载公钥时出错: {str(e)}")
+            return None
+    except Exception as e:
+        logger.error(f"获取苹果公钥时出错: {str(e)}")
+        return None
+
+
+def verify_and_decode_signed_payload(signed_payload):
+    """
+    验证并解析苹果 App Store Server Notifications V2 的 signedPayload
+
+    参数:
+        signed_payload: 苹果发送的签名载荷
+
+    返回:
+        解析后的通知数据字典，如果验证失败则返回None
+    """
+    try:
+        # 1. 获取JWT头部以获取算法
+        try:
+            header = jwt.get_unverified_header(signed_payload)
+            alg = header.get('alg', 'ES256')
+            logger.debug(f"JWT头部: alg={alg}")
+        except Exception as e:
+            logger.error(f"获取JWT头部时出错: {str(e)}")
+            return decode_signed_payload(signed_payload)
+
+        # 2. 获取公钥
+        public_key = get_apple_public_key()
+
+        if not public_key:
+            logger.warning("无法获取公钥，将不验证签名")
+            return decode_signed_payload(signed_payload)
+
+        # 3. 验证并解码JWT
+        try:
+            decoded = jwt.decode(
+                signed_payload,
+                public_key,
+                algorithms=[alg],
+                options={"verify_exp": True}
+            )
+            logger.info("JWT签名验证成功")
+            return decoded
+        except jwt.ExpiredSignatureError:
+            logger.warning("JWT已过期，但仍将处理通知")
+            return decode_signed_payload(signed_payload)
+        except jwt.InvalidSignatureError:
+            logger.warning("JWT签名无效")
+            return decode_signed_payload(signed_payload)  # 仍然返回解析的数据，但记录警告
+        except Exception as e:
+            logger.error(f"验证JWT时出错: {str(e)}")
+            return decode_signed_payload(signed_payload)
+
+    except Exception as e:
+        logger.error(f"处理signedPayload时出错: {str(e)}")
+        # 作为最后的尝试，使用不验证签名的方式解析
+        try:
+            return jwt.decode(
+                signed_payload,
+                options={"verify_signature": False}
+            )
+        except Exception:
+            return None

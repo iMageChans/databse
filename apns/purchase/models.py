@@ -8,6 +8,7 @@ from celery import shared_task
 from configurations.models import AppleAppConfiguration
 import logging
 from .services import UserService
+import base64
 
 logger = logging.getLogger(__name__)
 
@@ -225,7 +226,7 @@ class Purchase(models.Model):
             latest_receipt_info = unified_receipt.get('latest_receipt_info', [])
             app_id = 'pocket_ai'
 
-            logger.info(f"收到苹果通知: 类型={notification_type}, 应用={app_id}")
+            logger.error(f"收到苹果通知: 类型={notification_type}, 应用={app_id}")
 
             if not latest_receipt or not latest_receipt_info:
                 logger.error("通知中缺少收据信息")
@@ -411,7 +412,7 @@ class Purchase(models.Model):
                     }
                 )
 
-                logger.info(
+                logger.error(
                     f"处理通知: 类型={notification_type}, 用户ID={user_id}, 产品={product_id}, 状态={status}, 到期时间={expires_at}")
 
                 # 更新用户权限
