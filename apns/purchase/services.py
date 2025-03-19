@@ -142,6 +142,8 @@ class UserService:
             if expires_at:
                 data["expires_at"] = expires_at
 
+            logger.error(f"data: {data}")
+
             # 获取API密钥
             headers = {}
             if app_id:
