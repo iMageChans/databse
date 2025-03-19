@@ -37,7 +37,7 @@ class PurchaseVerificationView(CreateModelMixin, GenericViewSet):
         receipt_data = serializer.validated_data['receipt_data']
         user_id = serializer.validated_data['user_id']
         sandbox = serializer.validated_data.get('sandbox', True)
-        app_id = serializer.validated_data.get('app_id')
+        app_id = serializer.validated_data.get('app_id', 'pocket_ai')
 
         # 验证并处理收据
         success, result = PurchaseService.verify_and_process_receipt(receipt_data, user_id, sandbox, app_id)
