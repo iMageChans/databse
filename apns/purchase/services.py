@@ -129,10 +129,6 @@ class UserService:
             # 构建请求URL
             api_url = f"{settings.BASE_URL}/users/api/users/{user_id}/update_premium_status/"
 
-            # 如果expires_at是datetime对象，转换为ISO格式字符串
-            if expires_at and isinstance(expires_at, datetime.datetime):
-                expires_at = expires_at.isoformat()
-
             # 构建请求数据
             data = {
                 "user_id": user_id,

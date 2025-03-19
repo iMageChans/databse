@@ -2,11 +2,10 @@ import base64
 import json
 
 import jwt
-from rest_framework import viewsets, status, permissions
+from rest_framework import status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAdminUser
 
 from configurations.models import AppleAppConfiguration
 from .models import Purchase
@@ -16,8 +15,6 @@ from .serializers import (
     PurchaseSerializer
 )
 from .services import PurchaseService, UserService
-from cryptography.hazmat.primitives.serialization import load_pem_public_key
-from cryptography.hazmat.backends import default_backend
 import logging
 from .tasks import sync_user_premium_status
 from django.utils import timezone
