@@ -163,7 +163,8 @@ class UserService:
             )
 
             # 检查响应
-            response.raise_for_status()  # 如果状态码不是200，抛出异常
+            status_code = response.status_code
+            logger.error(f"status_code: {status_code}")
 
             result = response.json()
 
