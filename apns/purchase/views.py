@@ -34,7 +34,8 @@ class PurchaseVerificationView(CreateModelMixin, GenericViewSet):
     serializer_class = VerifyReceiptSerializer
 
     def create(self, request, *args, **kwargs):
-        serializer = VerifyReceiptSerializer(data=request.data)
+        request_data = request.data
+        serializer = VerifyReceiptSerializer(data=request_data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -42,6 +43,7 @@ class PurchaseVerificationView(CreateModelMixin, GenericViewSet):
         user_id = serializer.validated_data['user_id']
         sandbox = serializer.validated_data.get('sandbox', settings.SANDBOX)
         app_id = serializer.validated_data.get('app_id', 'pocket_ai')
+        logger.error(serializer)
 
         # 验证并处理收据
         success, result = PurchaseService.verify_and_process_receipt(receipt_data, user_id, sandbox, app_id)
