@@ -16,7 +16,7 @@ class TokenAuthMiddleware:
             '/users/api/auth/refresh/',   # 添加刷新令牌接口
             '/users/api/auth/verify/',    # 添加验证接口
             '/apns/api/purchase/verify/', # 添加内购验证接口
-            '/apns/api/webhook/',         # 添加webhook接口
+            '/apns/api/purchase/webhook/',         # 添加webhook接口
             '/admin/',
             '/openapi',
             '/static/',
