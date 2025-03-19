@@ -419,7 +419,7 @@ class Purchase(models.Model):
                     if latest_expires_at is None or sub.expires_at > latest_expires_at:
                         latest_expires_at = sub.expires_at
 
-                logger.info(f"用户 {user_id} 有有效订阅，最晚到期时间: {latest_expires_at}")
+                logger.error(f"用户 {user_id} 有有效订阅，最晚到期时间: {latest_expires_at}")
 
                 # 更新用户会员状态为有效
                 UserService.update_premium_status(
@@ -428,7 +428,7 @@ class Purchase(models.Model):
                     expires_at=latest_expires_at
                 )
             else:
-                logger.info(f"用户 {user_id} 没有有效订阅，取消会员状态")
+                logger.error(f"用户 {user_id} 没有有效订阅，取消会员状态")
 
                 # 更新用户会员状态为无效
                 UserService.update_premium_status(
