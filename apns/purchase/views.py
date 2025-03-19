@@ -188,12 +188,10 @@ class PurchaseListView(ListModelMixin, RetrieveModelMixin, GenericViewSet):
             if active_subscriptions.exists():
                 # 用户有有效订阅
                 latest_subscription = active_subscriptions.first()
-                app_id = latest_subscription.app_id
 
                 success = UserService.update_premium_status(
                     user_id=user_id,
                     is_premium=True,
-                    app_id=app_id,
                     expires_at=latest_subscription.expires_at
                 )
 
@@ -210,13 +208,10 @@ class PurchaseListView(ListModelMixin, RetrieveModelMixin, GenericViewSet):
             else:
                 # 用户没有有效订阅
                 # 获取用户最后一条记录的app_id
-                last_purchase = Purchase.objects.filter(user_id=user_id).order_by('-updated_at').first()
-                app_id = last_purchase.app_id if last_purchase else None
 
                 success = UserService.update_premium_status(
                     user_id=user_id,
                     is_premium=False,
-                    app_id=app_id
                 )
 
                 if success:

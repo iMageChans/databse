@@ -7,6 +7,7 @@ from django.conf import settings
 from celery import shared_task
 from configurations.models import AppleAppConfiguration
 import logging
+from .services import UserService
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +68,7 @@ class Purchase(models.Model):
         return f"用户ID:{self.user_id} - {self.product_id} - {'成功' if self.is_successful else '处理中'}"
 
     @classmethod
-    def verify_receipt(cls, receipt_data, sandbox=True, app_id='pocket_ai'):
+    def verify_receipt(cls, receipt_data, sandbox=False, app_id='pocket_ai'):
         """
         验证苹果收据
 
@@ -191,7 +192,7 @@ class Purchase(models.Model):
                 transaction_id=transaction_id,
                 defaults={
                     'user_id': user_id,
-                    'app_id': receipt.get('bundle_id'),
+                    'app_id': 'pocket_ai',
                     'product_id': product_id,
                     'original_transaction_id': original_transaction_id,
                     'receipt_data': verification_result.get('latest_receipt', verification_result.get('receipt-data')),
@@ -200,7 +201,7 @@ class Purchase(models.Model):
                     'is_active': True,
                     'is_successful': True,
                     'status': 'success',
-                    'notes': f"验证成功"
+                    'notes': f"验证成功记录"
                 }
             )
 
@@ -222,7 +223,7 @@ class Purchase(models.Model):
             unified_receipt = notification_data.get('unified_receipt', {})
             latest_receipt = unified_receipt.get('latest_receipt')
             latest_receipt_info = unified_receipt.get('latest_receipt_info', [])
-            app_id = unified_receipt.get('bundle_id')
+            app_id = 'pocket_ai'
 
             logger.info(f"收到苹果通知: 类型={notification_type}, 应用={app_id}")
 
@@ -406,7 +407,7 @@ class Purchase(models.Model):
                         'is_successful': status == 'success',
                         'status': status,
                         'notification_type': notification_type,
-                        'notes': notes + ("成功创建")
+                        'notes': notes + (", 新建记录" if created else ", 更新记录")
                     }
                 )
 
@@ -424,7 +425,6 @@ class Purchase(models.Model):
         """根据购买记录更新用户权限"""
         try:
             from django.utils import timezone
-            from purchase.services import UserService
 
             # 获取用户所有有效的订阅，按产品分组
             active_subscriptions = {}
@@ -461,7 +461,6 @@ class Purchase(models.Model):
                 UserService.update_premium_status(
                     user_id=user_id,
                     is_premium=True,
-                    app_id=purchase.app_id,
                     expires_at=latest_expires_at
                 )
             else:
@@ -470,8 +469,7 @@ class Purchase(models.Model):
                 # 更新用户会员状态为无效
                 UserService.update_premium_status(
                     user_id=user_id,
-                    is_premium=False,
-                    app_id=purchase.app_id
+                    is_premium=False
                 )
 
         except Exception as e:
