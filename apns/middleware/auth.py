@@ -20,7 +20,6 @@ class TokenAuthMiddleware:
             '/apns/api/purchase/verify/', # 添加内购验证接口
             '/apns/api/purchase/webhook/',
             '/api/purchase/webhook/',
-            '/api/purchase/verify/',
             '/admin/',
             '/openapi',
             '/static/',
