@@ -323,17 +323,7 @@ def get_apple_public_key():
         if not config or not config.auth_key:
             logger.warning("找不到苹果应用配置或公钥为空")
             return None
-
-        # 加载PEM格式的公钥
-        try:
-            public_key = load_pem_public_key(
-                config.auth_key.encode('utf-8'),
-                backend=default_backend()
-            )
-            return public_key
-        except Exception as e:
-            logger.error(f"加载公钥时出错: {str(e)}")
-            return None
+        return config.auth_key
     except Exception as e:
         logger.error(f"获取苹果公钥时出错: {str(e)}")
         return None
