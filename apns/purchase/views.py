@@ -75,13 +75,19 @@ class AppleWebhookView(CreateModelMixin, GenericViewSet):
             # 记录原始请求数据，便于调试
             logger.error(f"通知原始数据: {request.data}")
 
-            signed_payload = request.data['signedPayload']
+            signed_payload = request.data.get('signedPayload')
+            if not signed_payload:
+                return Response({"status": "error", "message": "Missing signedPayload"}, status=400)
 
             notification_data = verify_and_decode_signed_payload(signed_payload)
+            if not notification_data:
+                return Response({"status": "error", "message": "Invalid signedPayload"}, status=400)
 
-            logger.error(f"通知解析后数据: {notification_data}")
+            complete_notification = parse_apple_notification(notification_data)
 
-            serializer = NotificationSerializer(data=notification_data)
+            logger.error(f"通知解析后数据: {complete_notification}")
+
+            serializer = NotificationSerializer(data=complete_notification)
             if not serializer.is_valid():
                 logger.error(f"通知数据无效: {serializer.errors}")
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -389,3 +395,64 @@ def verify_and_decode_signed_payload(signed_payload):
             )
         except Exception:
             return None
+
+
+def parse_apple_notification(notification_data):
+    """
+    解析苹果 App Store Server Notifications V2 的完整通知数据
+
+    参数:
+        notification_data: 已解析的通知数据字典
+
+    返回:
+        包含完整信息的通知数据字典
+    """
+    try:
+        # 1. 获取基本通知信息
+        result = {
+            'notificationType': notification_data.get('notificationType'),
+            'subtype': notification_data.get('subtype'),
+            'notificationUUID': notification_data.get('notificationUUID'),
+            'version': notification_data.get('version'),
+            'signedDate': notification_data.get('signedDate')
+        }
+
+        # 2. 解析 data 部分
+        data = notification_data.get('data', {})
+        result['data'] = {
+            'appAppleId': data.get('appAppleId'),
+            'bundleId': data.get('bundleId'),
+            'bundleVersion': data.get('bundleVersion'),
+            'environment': data.get('environment'),
+        }
+
+        # 3. 解析 signedTransactionInfo
+        signed_transaction_info = data.get('signedTransactionInfo')
+        if signed_transaction_info:
+            transaction_info = verify_and_decode_signed_payload(signed_transaction_info)
+            if transaction_info:
+                result['data']['transactionInfo'] = transaction_info
+                logger.info(
+                    f"成功解析交易信息: {transaction_info.get('productId')}, 交易ID: {transaction_info.get('transactionId')}")
+
+        # 4. 解析 signedRenewalInfo
+        signed_renewal_info = data.get('signedRenewalInfo')
+        if signed_renewal_info:
+            renewal_info = verify_and_decode_signed_payload(signed_renewal_info)
+            if renewal_info:
+                result['data']['renewalInfo'] = renewal_info
+                logger.info(
+                    f"成功解析续订信息: 自动续订状态: {renewal_info.get('autoRenewStatus')}, 下次续订日期: {renewal_info.get('renewalDate')}")
+
+        # 5. 解析其他可能的嵌套 JWT
+        for key, value in data.items():
+            if key.startswith('signed') and key not in ['signedTransactionInfo', 'signedRenewalInfo']:
+                decoded_value = verify_and_decode_signed_payload(value)
+                if decoded_value:
+                    result['data'][key.replace('signed', '')] = decoded_value
+
+        return result
+
+    except Exception as e:
+        logger.error(f"解析完整通知数据时出错: {str(e)}")
+        return notification_data  # 返回原始数据
