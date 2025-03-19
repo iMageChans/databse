@@ -45,12 +45,13 @@ class PurchaseVerificationView(CreateModelMixin, GenericViewSet):
         if not success:
             return Response({
                 'code': 400,
-                'msg': 'success',
+                'msg': 'failure',
                 'data': result,
             }, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
-            'success': True,
+            'code': 200,
+            'msg': 'success',
             'data': PurchaseSerializer(result).data
         })
 
@@ -77,7 +78,11 @@ class AppleWebhookView(CreateModelMixin, GenericViewSet):
             Purchase.process_notification.delay(serializer.validated_data)
 
             # 立即返回成功响应，避免苹果服务器重试
-            return Response({'success': True, 'message': '通知已接收，正在处理'})
+            return Response({
+                'code': 200,
+                'msg': 'success',
+                'data': {}
+            })
 
         except Exception as e:
             logger.exception(f"处理通知时出错: {str(e)}")
@@ -91,32 +96,32 @@ class PurchaseListView(ListModelMixin, RetrieveModelMixin, GenericViewSet):
     """
     serializer_class = PurchaseSerializer
     permission_classes = [IsAuthenticatedExternal]
-    
+
     def get_queryset(self):
         """
         根据查询参数过滤购买记录
         """
-        
+
         # 按用户ID过滤
         user_id = self.request.remote_user.get('id')
         queryset = Purchase.objects.filter(user_id=user_id)
-            
+
         # 按活跃状态过滤
         is_active = self.request.GET.get('is_active')
         if is_active is not None:
             is_active = is_active.lower() == 'true'
             queryset = queryset.filter(is_active=is_active)
-            
+
         # 按应用ID过滤
         app_id = self.request.GET.get('app_id')
         if app_id:
             queryset = queryset.filter(app_id=app_id)
-            
+
         # 按产品ID过滤
         product_id = self.request.GET.get('product_id')
         if product_id:
             queryset = queryset.filter(product_id=product_id)
-            
+
         return queryset.order_by('-created_at')
 
     @action(detail=False, methods=['get'])
@@ -126,7 +131,8 @@ class PurchaseListView(ListModelMixin, RetrieveModelMixin, GenericViewSet):
         purchases = PurchaseService.get_active_purchases(user_id)
 
         return Response({
-            'success': True,
+            'code': 200,
+            'msg': 'success',
             'data': PurchaseSerializer(purchases, many=True).data
         })
 
@@ -146,7 +152,11 @@ class PurchaseListView(ListModelMixin, RetrieveModelMixin, GenericViewSet):
         if has_subscription and expires_at:
             response_data['expires_at'] = expires_at
 
-        return Response(response_data)
+        return Response({
+            'code': 200,
+            'msg': 'success',
+            'data': response_data
+        })
 
     @action(detail=False, methods=['post'], permission_classes=[IsAdminUser])
     def sync_premium_status(self, request):
@@ -156,15 +166,18 @@ class PurchaseListView(ListModelMixin, RetrieveModelMixin, GenericViewSet):
             sync_user_premium_status.delay()
 
             return Response({
-                'success': True,
-                'message': '同步任务已启动，请稍后查看结果'
+                'code': 200,
+                'msg': '同步任务已启动，请稍后查看结果',
+                'data': {}
             })
 
         except Exception as e:
             logger.exception(f"启动同步任务时出错: {str(e)}")
+
             return Response({
-                'success': False,
-                'message': f'启动同步任务失败: {str(e)}'
+                'code': 500,
+                'msg': 'failure',
+                'data': f'启动同步任务失败: {str(e)}',
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['post'])
@@ -173,8 +186,9 @@ class PurchaseListView(ListModelMixin, RetrieveModelMixin, GenericViewSet):
 
         if not user_id:
             return Response({
-                'success': False,
-                'message': '缺少用户ID'
+                'code': 400,
+                'msg': 'failure',
+                'data': '缺少用户ID',
             }, status=status.HTTP_400_BAD_REQUEST)
 
         try:
@@ -198,13 +212,15 @@ class PurchaseListView(ListModelMixin, RetrieveModelMixin, GenericViewSet):
 
                 if success:
                     return Response({
-                        'success': True,
-                        'message': f'用户 {user_id} 的会员状态已更新为有效，到期时间: {latest_subscription.expires_at}'
+                        'code': 200,
+                        'msg': 'success',
+                        'data': PurchaseSerializer(active_subscriptions).data
                     })
                 else:
                     return Response({
-                        'success': False,
-                        'message': f'更新用户 {user_id} 的会员状态失败'
+                        'code': 500,
+                        'msg': 'failure',
+                        'data': f'更新用户 {user_id} 的会员状态失败',
                     }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             else:
                 # 用户没有有效订阅
@@ -217,18 +233,21 @@ class PurchaseListView(ListModelMixin, RetrieveModelMixin, GenericViewSet):
 
                 if success:
                     return Response({
-                        'success': True,
-                        'message': f'用户 {user_id} 的会员状态已更新为无效'
+                        'code': 200,
+                        'msg': 'success',
+                        'data': PurchaseSerializer(active_subscriptions).data
                     })
                 else:
                     return Response({
-                        'success': False,
-                        'message': f'更新用户 {user_id} 的会员状态失败'
+                        'code': 500,
+                        'msg': 'failure',
+                        'data': f'更新用户 {user_id} 的会员状态失败',
                     }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         except Exception as e:
             logger.exception(f"同步用户 {user_id} 的会员状态时出错: {str(e)}")
             return Response({
-                'success': False,
-                'message': f'同步用户状态失败: {str(e)}'
+                'code': 500,
+                'msg': 'failure',
+                'data': f'同步用户状态失败: {str(e)}',
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
