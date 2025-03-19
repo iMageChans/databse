@@ -498,7 +498,7 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
             # 创建新的默认用户模板
             user_template = UsersAssistantTemplates.objects.create(
                 user_id=user_id,
-                name='默认模板',
+                name='default',
                 prompt_template=prompt,
                 is_default=True,
                 is_premium_template=False

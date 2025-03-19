@@ -81,12 +81,12 @@ class AgentViewSet(CreateModelMixin,
             # 创建默认的助手配置
             default_config = {
                 'user_id': user_id,
-                'name': '默认配置',
+                'name': 'default',
                 'relationship': FREE_RELATIONSHIP_OPTIONS[0],
                 'nickname': FREE_NICKNAME_OPTIONS[0],
                 'personality': FREE_PERSONALITY_OPTIONS[0],
-                'greeting': '你好！有什么我可以帮助你的吗？',
-                'dialogue_style': '友好',
+                'greeting': 'Hello! Is there anything I can help you with?',
+                'dialogue_style': 'friendly',
                 'is_public': False
             }
 
