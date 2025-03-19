@@ -319,6 +319,7 @@ def get_apple_public_key():
     try:
         # 从配置中获取公钥
         config = AppleAppConfiguration.objects.filter(name='pocket_ai').first()
+        logger.error(f"config: {config.auth_key}")
         if not config or not config.auth_key:
             logger.warning("找不到苹果应用配置或公钥为空")
             return None
