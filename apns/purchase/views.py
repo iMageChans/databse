@@ -1,20 +1,23 @@
-# iap_app/views.py
-import os
-import json
-import logging
-import requests
-from rest_framework import permissions, status
+from rest_framework import viewsets, status, permissions
+from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.utils import timezone
-
-from utils.permissions import IsAuthenticatedExternal
-from utils.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin
-from rest_framework.viewsets import GenericViewSet
-
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from .models import Purchase
-from .serializers import PurchaseVerificationSerializer, PurchaseSerializer, PurchaseStatusSerializer
-from .services import AppleIAPService
-from configurations.models import AppleAppConfiguration
+from .serializers import (
+    VerifyReceiptSerializer,
+    NotificationSerializer,
+    PurchaseSerializer
+)
+from .services import PurchaseService, UserService
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+import logging
+from .tasks import sync_user_premium_status
+from django.utils import timezone
+from utils.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin
+from utils.permissions import IsAuthenticatedExternal
+from rest_framework.viewsets import GenericViewSet
 
 logger = logging.getLogger(__name__)
 
@@ -24,141 +27,31 @@ class PurchaseVerificationView(CreateModelMixin, GenericViewSet):
     接收iOS应用发送的购买凭证，验证并处理
     """
     permission_classes = [IsAuthenticatedExternal]
-    serializer_class = PurchaseVerificationSerializer
+    serializer_class = VerifyReceiptSerializer
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        serializer = VerifyReceiptSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         receipt_data = serializer.validated_data['receipt_data']
         user_id = serializer.validated_data['user_id']
-        app_id = serializer.validated_data['app_id']
-        product_id = serializer.validated_data['product_id']
-        transaction_id = serializer.validated_data['transaction_id']
-        original_transaction_id = serializer.validated_data.get('original_transaction_id', transaction_id)
+        sandbox = serializer.validated_data.get('sandbox', True)
+        app_id = serializer.validated_data.get('app_id')
 
-        try:
-            # 检查是否已处理过该交易
-            existing_purchase = Purchase.objects.filter(transaction_id=transaction_id).first()
-            if existing_purchase and existing_purchase.is_successful:
-                logger.info(f"Transaction {transaction_id} already processed successfully.")
-                return Response({
-                    'code': 200,
-                    'msg': 'success',
-                    'data': PurchaseSerializer(existing_purchase).data
-                })
+        # 验证并处理收据
+        success, result = PurchaseService.verify_and_process_receipt(receipt_data, user_id, sandbox, app_id)
 
-            # 创建或获取购买记录
-            purchase = Purchase.objects.filter(transaction_id=transaction_id).first()
-            if not purchase:
-                purchase = Purchase.objects.create(
-                    user_id=user_id,
-                    app_id=app_id,
-                    product_id=product_id,
-                    transaction_id=transaction_id,
-                    original_transaction_id=original_transaction_id,
-                    receipt_data=receipt_data,
-                    purchase_date=timezone.now(),
-                    is_active=False,
-                    is_successful=False,
-                    status='pending'
-                )
-
-            # 验证收据
-            verification_result = AppleIAPService.verify_receipt(receipt_data, app_id)
-            res_status = verification_result.get('status')
-
-            if res_status == 0:
-                # 设置过期时间
-                if product_id == "Weekly_Subscription":
-                    duration_type = "week"
-                    expires_at = timezone.now() + timezone.timedelta(days=7)
-                elif product_id == "Monthly_Subscription":
-                    duration_type = "month"
-                    expires_at = timezone.now() + timezone.timedelta(days=30)
-                elif product_id == "Yearly_Subscription":
-                    duration_type = "year"
-                    expires_at = timezone.now() + timezone.timedelta(days=365)
-                else:
-                    return Response({
-                        'code': 400,
-                        'msg': f'未知的订阅类型: {product_id}',
-                    }, status=status.HTTP_400_BAD_REQUEST)
-
-                purchase.expires_at = expires_at
-                purchase.is_active = True
-                purchase.save()
-
-                # 调用用户服务更新会员状态
-                config = AppleAppConfiguration.objects.filter(name=app_id).first()
-                token = config.admin_token
-                if not token:
-                    logger.error("Missing ADMIN_TOKEN environment variable")
-                    return Response({
-                        'code': 500,
-                        'msg': 'Server configuration error',
-                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-                param = {
-                    "is_premium": True,
-                    "duration_type": duration_type
-                }
-
-                try:
-                    rsp = requests.post(
-                        url=f"https://pocket.pulseheath.com/users/api/users/{user_id}/update_premium_status/",
-                        json=param,  # 使用json参数而不是data
-                        headers={
-                            'Content-Type': 'application/json',
-                            'Authorization': token,
-                        },
-                        timeout=30  # 添加超时
-                    )
-
-                    if rsp.status_code == 200:
-                        purchase.is_successful = True
-                        purchase.status = 'success'
-                        purchase.save()
-                        return Response({
-                            'code': 200,
-                            'msg': 'success',
-                            'data': PurchaseSerializer(purchase).data
-                        })
-                    else:
-                        logger.error(f"Failed to update user premium status: {rsp.status_code} - {rsp.text}")
-                        purchase.notes = f"用户服务调用失败: {rsp.status_code} - {rsp.text}"
-                        purchase.status = 'failed'
-                        purchase.save()
-                        return Response({
-                            'code': 400,
-                            'msg': f'Failed to update user premium status: {rsp.status_code}',
-                        }, status=status.HTTP_400_BAD_REQUEST)
-                except requests.RequestException as e:
-                    logger.error(f"Network error when calling user service: {str(e)}")
-                    purchase.notes = f"用户服务网络错误: {str(e)}"
-                    purchase.status = 'failed'
-                    purchase.save()
-                    return Response({
-                        'code': 500,
-                        'msg': f'Network error: {str(e)}',
-                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            else:
-                # 验证失败
-                purchase.is_successful = False
-                purchase.status = 'failed'
-                purchase.notes = f"验证失败，状态码: {res_status}"
-                purchase.save()
-                return Response({
-                    'code': 400,
-                    'msg': f'Receipt verification failed with status {res_status}',
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-        except Exception as e:
-            logger.exception(f"Error processing purchase: {str(e)}")
+        if not success:
             return Response({
-                'code': 500,
-                'msg': f'Server error: {str(e)}',
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                'success': False,
+                'message': result
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({
+            'success': True,
+            'data': PurchaseSerializer(result).data
+        })
 
 
 class AppleWebhookView(CreateModelMixin, GenericViewSet):
@@ -169,51 +62,26 @@ class AppleWebhookView(CreateModelMixin, GenericViewSet):
 
     def create(self, request, *args, **kwargs):
         try:
-            # 获取请求数据
-            request_data = request.data
-            if isinstance(request_data, str):
-                try:
-                    request_data = json.loads(request_data)
-                except json.JSONDecodeError:
-                    logger.error("Invalid JSON in webhook request")
-                    return Response({"status": "error", "message": "Invalid JSON"}, 
-                                   status=status.HTTP_400_BAD_REQUEST)
-            
-            # 记录原始通知
-            logger.info(f"Received Apple webhook: {json.dumps(request_data)}")
-            
-            # 获取通知类型和应用ID
-            notification_type = request_data.get('notification_type')
-            app_id = request_data.get('app_id')
-            
-            if not notification_type or not app_id:
-                logger.error("Missing notification_type or app_id in webhook")
-                return Response({"status": "error", "message": "Missing required fields"}, 
-                               status=status.HTTP_400_BAD_REQUEST)
-            
-            # 处理通知
-            AppleIAPService.process_receipt_from_notification(request_data, app_id)
+            logger.info("收到苹果服务器通知")
 
-            response = requests.post(url="https://pocket.nicebudgeting.com/apns/api/purchase/webhook/",
-                json=request_data,
-                headers={
-                    'Content-Type': 'application/json',
-                },
-                timeout=10  # 设置超时时间
-            )
+            # 记录原始请求数据，便于调试
+            logger.debug(f"通知原始数据: {request.data}")
 
-            if response.status_code != 200:
-                logger.error(f"Failed to forward webhook to : "
-                             f"status={response.status_code}, response={response.text}")
-            else:
-                logger.info(f"Successfully forwarded webhook to ")
-            
-            return Response({"status": "success"}, status=status.HTTP_200_OK)
-            
+            serializer = NotificationSerializer(data=request.data)
+            if not serializer.is_valid():
+                logger.error(f"通知数据无效: {serializer.errors}")
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+            # 异步处理通知
+            Purchase.process_notification.delay(serializer.validated_data)
+
+            # 立即返回成功响应，避免苹果服务器重试
+            return Response({'success': True, 'message': '通知已接收，正在处理'})
+
         except Exception as e:
-            logger.exception(f"Webhook processing failed: {str(e)}")
-            # 即使处理失败，也返回200状态码，避免Apple重复发送通知
-            return Response({"status": "error", "message": str(e)}, status=status.HTTP_200_OK)
+            logger.exception(f"处理通知时出错: {str(e)}")
+            # 即使出错也返回200状态码，避免苹果服务器重试
+            return Response({'success': False, 'message': str(e)}, status=status.HTTP_200_OK)
 
 
 class PurchaseListView(ListModelMixin, RetrieveModelMixin, GenericViewSet):
@@ -227,12 +95,10 @@ class PurchaseListView(ListModelMixin, RetrieveModelMixin, GenericViewSet):
         """
         根据查询参数过滤购买记录
         """
-        queryset = Purchase.objects.all()
         
         # 按用户ID过滤
-        user_id = self.request.GET.get('user_id')
-        if user_id:
-            queryset = queryset.filter(user_id=user_id)
+        user_id = self.request.remote_user.get('id')
+        queryset = Purchase.objects.filter(user_id=user_id)
             
         # 按活跃状态过滤
         is_active = self.request.GET.get('is_active')
@@ -252,42 +118,115 @@ class PurchaseListView(ListModelMixin, RetrieveModelMixin, GenericViewSet):
             
         return queryset.order_by('-created_at')
 
-    def get_user_status(self, request, user_id=None):
-        """
-        获取用户的订阅状态
-        """
+    @action(detail=False, methods=['get'])
+    def active_purchases(self, request):
+        """获取用户的有效购买记录"""
+        user_id = request.remote_user.get('id')
+        purchases = PurchaseService.get_active_purchases(user_id)
+
+        return Response({
+            'success': True,
+            'data': PurchaseSerializer(purchases, many=True).data
+        })
+
+    @action(detail=False, methods=['get'])
+    def check_subscription(self, request):
+        """检查用户是否有有效的订阅"""
+        user_id = request.remote_user.get('id')
+        product_id = request.query_params.get('product_id')
+
+        has_subscription, expires_at = PurchaseService.has_active_subscription(user_id, product_id)
+
+        response_data = {
+            'success': True,
+            'has_subscription': has_subscription
+        }
+
+        if has_subscription and expires_at:
+            response_data['expires_at'] = expires_at
+
+        return Response(response_data)
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAdminUser])
+    def sync_premium_status(self, request):
+        """手动触发同步用户会员状态的任务"""
+        try:
+            # 异步执行同步任务
+            sync_user_premium_status.delay()
+
+            return Response({
+                'success': True,
+                'message': '同步任务已启动，请稍后查看结果'
+            })
+
+        except Exception as e:
+            logger.exception(f"启动同步任务时出错: {str(e)}")
+            return Response({
+                'success': False,
+                'message': f'启动同步任务失败: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['post'])
+    def sync_user_status(self, request):
+        """同步指定用户的会员状态"""
+        user_id = request.remote_user.get('id')
+
         if not user_id:
             return Response({
-                'code': 400,
-                'msg': '缺少用户ID',
+                'success': False,
+                'message': '缺少用户ID'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # 查找用户最新的有效订阅
-        active_purchase = Purchase.objects.filter(
-            user_id=user_id,
-            is_active=True,
-            is_successful=True,
-            expires_at__gt=timezone.now()
-        ).order_by('-expires_at').first()
-        
-        if not active_purchase:
+
+        try:
+            # 获取用户的有效订阅
+            active_subscriptions = Purchase.objects.filter(
+                user_id=user_id,
+                is_active=True,
+                is_successful=True,
+                expires_at__gt=timezone.now()
+            ).order_by('-expires_at')
+
+            if active_subscriptions.exists():
+                # 用户有有效订阅
+                latest_subscription = active_subscriptions.first()
+
+                success = UserService.update_premium_status(
+                    user_id=user_id,
+                    is_premium=True,
+                    expires_at=latest_subscription.expires_at
+                )
+
+                if success:
+                    return Response({
+                        'success': True,
+                        'message': f'用户 {user_id} 的会员状态已更新为有效，到期时间: {latest_subscription.expires_at}'
+                    })
+                else:
+                    return Response({
+                        'success': False,
+                        'message': f'更新用户 {user_id} 的会员状态失败'
+                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            else:
+                # 用户没有有效订阅
+                success = UserService.update_premium_status(
+                    user_id=user_id,
+                    is_premium=False
+                )
+
+                if success:
+                    return Response({
+                        'success': True,
+                        'message': f'用户 {user_id} 的会员状态已更新为无效'
+                    })
+                else:
+                    return Response({
+                        'success': False,
+                        'message': f'更新用户 {user_id} 的会员状态失败'
+                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        except Exception as e:
+            logger.exception(f"同步用户 {user_id} 的会员状态时出错: {str(e)}")
             return Response({
-                'code': 200,
-                'msg': 'success',
-                'data': {
-                    'has_active_subscription': False,
-                    'subscription_info': None
-                }
-            })
-        
-        # 使用状态序列化器
-        serializer = PurchaseStatusSerializer(active_purchase)
-        
-        return Response({
-            'code': 200,
-            'msg': 'success',
-            'data': {
-                'has_active_subscription': True,
-                'subscription_info': serializer.data
-            }
-        })
+                'success': False,
+                'message': f'同步用户状态失败: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -26,6 +26,10 @@ app.conf.beat_schedule = {
         'task': 'notifications.tasks.send_scheduled_notifications',
         'schedule': crontab(minute='*'),  # 每分钟检查一次
     },
+    'sync-user-premium-status': {
+        'task': 'purchase.tasks.sync_user_premium_status',
+        'schedule': crontab(hour='*', minute='*'),
+    },
 }
 
 @app.task(bind=True, ignore_result=True)

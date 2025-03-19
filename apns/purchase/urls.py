@@ -11,6 +11,4 @@ router.register(r'list', PurchaseListView, basename='purchase-list')
 # URL模式
 urlpatterns = [
     path('', include(router.urls)),
-    # 添加一个简单的状态检查接口
-    path('status/<int:user_id>/', PurchaseListView.as_view({'get': 'get_user_status'}), name='user-subscription-status'),
-] 
+]
