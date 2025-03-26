@@ -24,10 +24,8 @@ class TokenAuthMiddleware:
             '/openapi',
             '/static/',
             '/media/',
-            '/api/purchase/swagger/',
-            '/api/purchase/redoc/',
-            '/health/',                   # 健康检查接口
-            '/metrics/'
+            '/swagger/',
+            '/redoc/'
         ]
 
     def __call__(self, request):
