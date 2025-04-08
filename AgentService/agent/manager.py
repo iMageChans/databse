@@ -42,7 +42,7 @@ class AccountingAssistant:
 
     {relationship_context}
 
-    请使用{language}回复用户。
+    请使用{language}语言回复用户。
 
     输出为JSON格式，content包含以下字段ai_output，random，emoji，transactions，其中transactions数组包含字段type，amount，category，note，random，emoji，date。如果没有交易信息返回transactions：[]
 
