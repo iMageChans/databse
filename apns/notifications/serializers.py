@@ -46,6 +46,7 @@ class NotificationsSerializer(serializers.ModelSerializer):
         
         # 将该用户的所有其他通知设置设为非激活状态
         Notifications.objects.filter(user_id=user_id, is_active=True).update(is_active=False)
+        validated_data['is_active'] = True
         
         # 创建新的通知设置
         notification = Notifications.objects.create(**validated_data)
