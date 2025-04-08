@@ -58,6 +58,8 @@ class NotificationScheduleService:
                             sound="default",
                             custom_data={"type": "daily_reminder"}
                         )
+
+                        print(result)
                         
                         # 更新最后发送时间
                         notification.last_sent = timezone.now()

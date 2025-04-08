@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Notifications
 from utils.serializers_fields import TimestampField
 import pytz
+import logging
 
 class NotificationSendSerializer(serializers.Serializer):
     device_id = serializers.CharField(required=True)
@@ -44,8 +45,12 @@ class NotificationsSerializer(serializers.ModelSerializer):
         """创建通知设置，并将用户的其他设置设为非激活状态"""
         user_id = validated_data.get('user_id')
         
+        # 添加日志
+        print(f"Creating notification with data: {validated_data}")
+        
         # 将该用户的所有其他通知设置设为非激活状态
         Notifications.objects.filter(user_id=user_id, is_active=True).update(is_active=False)
+        validated_data['is_active'] = True
         
         # 创建新的通知设置
         notification = Notifications.objects.create(**validated_data)
