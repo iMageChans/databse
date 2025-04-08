@@ -84,9 +84,9 @@ class AccountingAssistant:
                  base_url=None,
                  redis_url=None,
                  timezone=None,
-                 model="gpt-3.5-turbo",
+                 model="qwen-max",
                  temperature=0.8,
-                 memory_ttl=24 * 3600,
+                 memory_ttl=3600,
                  log_level=logging.INFO,
                  prompt_template=None,
                  language="en"):
