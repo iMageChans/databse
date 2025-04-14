@@ -71,13 +71,13 @@ WEEKLY_NOTIFICATIONS = {
     }
 }
 
-@shared_task
-def send_scheduled_notifications():
-    """发送定时通知"""
-    print(f"[{timezone.now()}] 开始检查定时通知...")
-    count = NotificationScheduleService.send_scheduled_notifications()
-    print(f"[{timezone.now()}] 发送了 {count} 条通知")
-    return count
+# @shared_task
+# def send_scheduled_notifications():
+#     """发送定时通知"""
+#     print(f"[{timezone.now()}] 开始检查定时通知...")
+#     count = NotificationScheduleService.should_send_notification()
+#     print(f"[{timezone.now()}] 发送了 {count} 条通知")
+#     return count
 
 
 @shared_task
