@@ -246,12 +246,12 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
         if template:
             serializer = self.get_serializer(template)
             return Response({
-            'code': 200,
-            'msg': '获取成功',
-            'data': {
-                "results": serializer.data,
-            }
-        }, status=status.HTTP_200_OK)
+                'code': 200,
+                'msg': '获取成功',
+                'data': {
+                    "results": serializer.data,
+                }
+            }, status=status.HTTP_200_OK)
         return Response({
             'code': 200,
             'msg': '获取成功',
@@ -361,7 +361,6 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
                 msg=str(e)
             )
 
-
     @swagger_auto_schema(
         operation_summary="为新用户创建默认的助手模板",
         operation_description="为新用户创建默认的助手模板"
@@ -445,7 +444,6 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
                 msg=f"创建默认模板失败: {str(e)}"
             )
 
-
     @swagger_auto_schema(
         operation_summary="恢复默认设置",
         operation_description="将用户的助手模板恢复为系统默认设置"
@@ -465,7 +463,6 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
         try:
             # 删除用户现有的所有模板
             UsersAssistantTemplates.objects.filter(user_id=user_id).delete()
-            AssistantsConfigs.objects.filter(user_id=user_id).delete()
 
             # 获取默认的助手模板
             default_template = AssistantTemplates.objects.filter(is_default=True).first()
@@ -479,9 +476,9 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
             default_config = {
                 'user_id': user_id,
                 'name': 'Alice',
-                'relationship': 'Planner',
-                'nickname': 'Buddy',
-                'personality': 'Energetic & Upbeat',
+                'relationship': 'Planner',  # 使用第一个免费关系选项
+                'nickname': 'Buddy',  # 使用第一个免费昵称选项
+                'personality': 'Energetic & Upbeat',  # 使用第一个免费性格选项
                 'greeting': '',
                 'dialogue_style': '',
                 'is_public': False
@@ -489,7 +486,7 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
 
             # 删除用户现有的默认配置
             AssistantsConfigs.objects.filter(user_id=user_id, name='Alice').delete()
-            
+
             # 创建新的默认配置
             config = AssistantsConfigs.objects.create(**default_config)
 
@@ -564,28 +561,28 @@ class OptionsViewSet(ListModelMixin,
 
         # 构建带有付费标识的选项
         relationship_options = [
-            {"value": option, "is_premium": False} for option in RELATIONSHIP_OPTIONS['free']
-        ] + [
-            {"value": option, "is_premium": True} for option in RELATIONSHIP_OPTIONS['premium']
-        ] + [
-            {"value": "Customization", "is_premium": True}
-        ]
+                                   {"value": option, "is_premium": False} for option in RELATIONSHIP_OPTIONS['free']
+                               ] + [
+                                   {"value": option, "is_premium": True} for option in RELATIONSHIP_OPTIONS['premium']
+                               ] + [
+                                   {"value": "Customization", "is_premium": True}
+                               ]
 
         nickname_options = [
-            {"value": option, "is_premium": False} for option in NICKNAME_OPTIONS['free']
-        ] + [
-            {"value": option, "is_premium": True} for option in NICKNAME_OPTIONS['premium']
-        ] + [
-            {"value": "Customization", "is_premium": True}
-        ]
+                               {"value": option, "is_premium": False} for option in NICKNAME_OPTIONS['free']
+                           ] + [
+                               {"value": option, "is_premium": True} for option in NICKNAME_OPTIONS['premium']
+                           ] + [
+                               {"value": "Customization", "is_premium": True}
+                           ]
 
         personality_options = [
-            {"value": option, "is_premium": False} for option in PERSONALITY_OPTIONS['free']
-        ] + [
-            {"value": option, "is_premium": True} for option in PERSONALITY_OPTIONS['premium']
-        ] + [
-            {"value": "Customization", "is_premium": True}
-        ]
+                                  {"value": option, "is_premium": False} for option in PERSONALITY_OPTIONS['free']
+                              ] + [
+                                  {"value": option, "is_premium": True} for option in PERSONALITY_OPTIONS['premium']
+                              ] + [
+                                  {"value": "Customization", "is_premium": True}
+                              ]
 
         data = {
             'relationship': relationship_options,
