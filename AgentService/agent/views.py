@@ -10,15 +10,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from assistant.models import UsersAssistantTemplates, AssistantTemplates
 from engines.models import Engines
-from assistant.models import AssistantsConfigs
-import logging
-
-# 配置日志
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+from assistant.models import AssistantsConfigs, Assistant
 
 
 class AgentViewSet(CreateModelMixin,
@@ -112,12 +104,7 @@ class AgentViewSet(CreateModelMixin,
 
         custom_prompt = user_template.prompt_template
 
-        logger.info(f"参数model_name: {model_name}")
-
         engine = Engines.objects.get(name=model_name)
-
-        logger.info(f"参数engine.name: {engine.name}")
-        logger.info(f"参数engine.base_url: {engine.base_url}")
 
         assistant = AccountingAssistant(
             api_key=engine.api_key,
