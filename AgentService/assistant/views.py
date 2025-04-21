@@ -136,7 +136,7 @@ class AssistantsConfigsViewSet(ListModelMixin,
     ordering_fields = ['name', 'id']
 
     def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
+        queryset = self.get_queryset()
         page = self.paginate_queryset(queryset)
 
         if page is not None:
