@@ -36,13 +36,13 @@ PREMIUM_PERSONALITY_OPTIONS = [
 ]
 
 # 免费关系选项
-FREE_RELATIONSHIP_OPTIONS = ["Newbie", "Companion", "Buddy"]
+FREE_RELATIONSHIP_OPTIONS = ["Planner","Newbie", "Companion", "Buddy"]
 
 # 免费昵称选项
-FREE_NICKNAME_OPTIONS = ["Friend", "Mate", "Dude"]
+FREE_NICKNAME_OPTIONS = ["Buddy", "Friend", "Mate", "Dude"]
 
 # 免费性格选项
-FREE_PERSONALITY_OPTIONS = ["Cheerful", "Cute"]
+FREE_PERSONALITY_OPTIONS = ["Energetic & Upbeat", "Cheerful", "Cute"]
 
 # 判断是否是自定义值
 def is_custom_value(field, value):

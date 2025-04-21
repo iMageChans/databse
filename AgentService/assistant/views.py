@@ -136,7 +136,7 @@ class AssistantsConfigsViewSet(ListModelMixin,
     ordering_fields = ['name', 'id']
 
     def list(self, request, *args, **kwargs):
-        queryset = self.queryset.filter(user_id=request.remote_user.get('id'))
+        queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
 
         if page is not None:
@@ -190,15 +190,15 @@ class AssistantsConfigsViewSet(ListModelMixin,
         # 如果用户不是付费用户，过滤掉使用付费选项的配置
         if not is_premium:
             # 过滤关系字段
-            free_relationships = RELATIONSHIP_OPTIONS['free']
+            free_relationships = FREE_RELATIONSHIP_OPTIONS
             relationship_filter = models.Q(relationship__in=free_relationships)
 
             # 过滤昵称字段
-            free_nicknames = NICKNAME_OPTIONS['free']
+            free_nicknames = FREE_NICKNAME_OPTIONS
             nickname_filter = models.Q(nickname__in=free_nicknames)
 
             # 过滤性格字段
-            free_personalities = PERSONALITY_OPTIONS['free']
+            free_personalities = FREE_PERSONALITY_OPTIONS
             personality_filter = models.Q(personality__in=free_personalities)
 
             # 组合过滤条件
