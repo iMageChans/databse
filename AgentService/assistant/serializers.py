@@ -3,7 +3,7 @@ from rest_framework.exceptions import PermissionDenied
 
 from utils.serializers_fields import TimestampField
 from .models import Assistant, AssistantTemplates, AssistantsConfigs, UsersAssistantTemplates
-from .constants import RELATIONSHIP_OPTIONS, NICKNAME_OPTIONS, PERSONALITY_OPTIONS, is_custom_value
+from .constants import RELATIONSHIP_OPTIONS, NICKNAME_OPTIONS, PERSONALITY_OPTIONS, is_custom_value, FREE_RELATIONSHIP_OPTIONS, FREE_NICKNAME_OPTIONS, FREE_PERSONALITY_OPTIONS
 
 
 class AssistantSerializer(serializers.ModelSerializer):
@@ -58,7 +58,7 @@ class AssistantsConfigsSerializer(serializers.ModelSerializer):
             relationship = data['relationship']
             if not is_premium:
                 # 非付费用户只能使用免费选项
-                if relationship not in RELATIONSHIP_OPTIONS['free']:
+                if relationship not in FREE_RELATIONSHIP_OPTIONS:
                     if is_custom_value('relationship', relationship):
                         raise PermissionDenied("自定义关系仅对付费用户开放")
                     elif relationship in RELATIONSHIP_OPTIONS['premium']:
@@ -69,7 +69,7 @@ class AssistantsConfigsSerializer(serializers.ModelSerializer):
             nickname = data['nickname']
             if not is_premium:
                 # 非付费用户只能使用免费选项
-                if nickname not in NICKNAME_OPTIONS['free']:
+                if nickname not in FREE_NICKNAME_OPTIONS:
                     if is_custom_value('nickname', nickname):
                         raise PermissionDenied("自定义昵称仅对付费用户开放")
                     elif nickname in NICKNAME_OPTIONS['premium']:
@@ -80,7 +80,7 @@ class AssistantsConfigsSerializer(serializers.ModelSerializer):
             personality = data['personality']
             if not is_premium:
                 # 非付费用户只能使用免费选项
-                if personality not in PERSONALITY_OPTIONS['free']:
+                if personality not in FREE_PERSONALITY_OPTIONS:
                     if is_custom_value('personality', personality):
                         raise PermissionDenied("自定义性格仅对付费用户开放")
                     elif personality in PERSONALITY_OPTIONS['premium']:
