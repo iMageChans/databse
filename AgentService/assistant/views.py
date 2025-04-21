@@ -404,9 +404,9 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
             default_config = {
                 'user_id': user_id,
                 'name': 'Alice',
-                'relationship': 'Planner',  # 使用第一个免费关系选项
-                'nickname': 'Buddy',  # 使用第一个免费昵称选项
-                'personality': 'Energetic & Upbeat',  # 使用第一个免费性格选项
+                'relationship': 'Newbie',  # 使用第一个免费关系选项
+                'nickname': 'Friend',  # 使用第一个免费昵称选项
+                'personality': 'Cheerful',  # 使用第一个免费性格选项
                 'greeting': '',
                 'dialogue_style': '',
                 'is_public': False
@@ -476,9 +476,9 @@ class UsersAssistantTemplatesViewSet(ListModelMixin,
             default_config = {
                 'user_id': user_id,
                 'name': 'Alice',
-                'relationship': 'Planner',  # 使用第一个免费关系选项
-                'nickname': 'Buddy',  # 使用第一个免费昵称选项
-                'personality': 'Energetic & Upbeat',  # 使用第一个免费性格选项
+                'relationship': 'Newbie',  # 使用第一个免费关系选项
+                'nickname': 'Friend',  # 使用第一个免费昵称选项
+                'personality': 'Cheerful',  # 使用第一个免费性格选项
                 'greeting': '',
                 'dialogue_style': '',
                 'is_public': False
