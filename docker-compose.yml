@@ -50,6 +50,7 @@ services:
       - /var/www/static/users-service:/app/staticfiles
       - /var/www/static/users-service:/app/media
       - ./templates/users-service:/app/templates
+      - ./logs/users-service:/app/logs
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
